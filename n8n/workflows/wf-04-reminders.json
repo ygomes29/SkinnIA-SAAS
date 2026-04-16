@@ -1,0 +1,439 @@
+{
+  "name": "SkinnIA — Lembretes",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "nodes": [
+    {
+      "id": "schedule-trigger",
+      "name": "Cron 10min",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [-1160, -120],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "*/10 * * * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "webhook-response",
+      "name": "Webhook Confirmation Response",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-1160, 180],
+      "parameters": {
+        "path": "confirmation-response",
+        "httpMethod": "POST",
+        "responseMode": "onReceived"
+      }
+    },
+    {
+      "id": "query-24h",
+      "name": "Buscar Lembretes 24h",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [-920, -180],
+      "parameters": {
+        "method": "GET",
+        "url": "={{$env.NEXT_PUBLIC_SUPABASE_URL}}/rest/v1/rpc/skinnia_fetch_24h_reminders",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{$env.SUPABASE_SERVICE_ROLE_KEY}}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{$env.SUPABASE_SERVICE_ROLE_KEY}}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "send-24h",
+      "name": "Enviar Lembrete 24h",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [-680, -180],
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.EVOLUTION_API_URL}}/message/sendText/{{$env.SKINNIA_INSTANCE || 'default'}}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{$env.EVOLUTION_API_KEY}}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { number: $json.phone, text: `Oi ${$json.client_name}! Lembrando do seu agendamento amanhã: ${$json.service_name} às ${$json.start_label}. Responda 1 para confirmar, 2 para remarcar ou 3 para cancelar.` } }}"
+      }
+    },
+    {
+      "id": "query-2h",
+      "name": "Buscar Lembretes 2h",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [-920, -40],
+      "parameters": {
+        "method": "GET",
+        "url": "={{$env.NEXT_PUBLIC_SUPABASE_URL}}/rest/v1/rpc/skinnia_fetch_2h_reminders",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{$env.SUPABASE_SERVICE_ROLE_KEY}}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{$env.SUPABASE_SERVICE_ROLE_KEY}}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "send-2h",
+      "name": "Enviar Lembrete 2h",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [-680, -40],
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.EVOLUTION_API_URL}}/message/sendText/{{$env.SKINNIA_INSTANCE || 'default'}}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{$env.EVOLUTION_API_KEY}}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { number: $json.phone, text: `⏰ ${$json.client_name}, seu horário é hoje em 2 horas. Responda 1 para confirmar ou 2 para remarcar.` } }}"
+      }
+    },
+    {
+      "id": "closest-appointment",
+      "name": "Buscar Appointment Próximo",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [-920, 180],
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.N8N_BASE_URL}}/webhook/internal/find-closest-appointment",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{$json.body ?? $json}}"
+      }
+    },
+    {
+      "id": "parse-response",
+      "name": "Interpretar Resposta",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-680, 180],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const message = (($json.message ?? $json.body?.message ?? '') + '').trim();\nlet action = 'noop';\nif (message === '1') action = 'confirm';\nif (message === '2') action = 'reschedule';\nif (message === '3') action = 'cancel';\nreturn [{ json: { ...$json, action } }];"
+      }
+    },
+    {
+      "id": "switch-response",
+      "name": "Switch Resposta",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [-430, 180],
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{$json.action}}",
+        "rules": [
+          {
+            "operation": "equal",
+            "value2": "confirm"
+          },
+          {
+            "operation": "equal",
+            "value2": "reschedule"
+          },
+          {
+            "operation": "equal",
+            "value2": "cancel"
+          }
+        ]
+      }
+    },
+    {
+      "id": "confirm-attendance",
+      "name": "Confirmar Presença",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [-180, 90],
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{$env.NEXT_PUBLIC_SUPABASE_URL}}/rest/v1/appointments?id=eq.{{$json.appointment_id}}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{$env.SUPABASE_SERVICE_ROLE_KEY}}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{$env.SUPABASE_SERVICE_ROLE_KEY}}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { confirmation_status: 'confirmed', confirmed_at: new Date().toISOString() } }}"
+      }
+    },
+    {
+      "id": "trigger-reschedule",
+      "name": "Chamar WF 02",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [-180, 180],
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.N8N_WEBHOOK_BASE}}/schedule-request",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{$json}}"
+      }
+    },
+    {
+      "id": "trigger-cancel",
+      "name": "Chamar WF 05",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [-180, 270],
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.N8N_WEBHOOK_BASE}}/cancellation-request",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{$json}}"
+      }
+    },
+    {
+      "id": "notify-professional",
+      "name": "Avisar Profissional 1h",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [-430, 20],
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.N8N_BASE_URL}}/webhook/internal/no-response-alert",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { scope: 'reminders' } }}"
+      }
+    },
+    {
+      "id": "error-handler",
+      "name": "Error Handler",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [60, 180],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "return [{ json: { ok: true, workflow: 'wf-04-reminders', handledAt: new Date().toISOString() } }];"
+      }
+    }
+  ],
+  "connections": {
+    "Cron 10min": {
+      "main": [
+        [
+          {
+            "node": "Buscar Lembretes 24h",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Buscar Lembretes 2h",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Avisar Profissional 1h",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Lembretes 24h": {
+      "main": [
+        [
+          {
+            "node": "Enviar Lembrete 24h",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Lembretes 2h": {
+      "main": [
+        [
+          {
+            "node": "Enviar Lembrete 2h",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Confirmation Response": {
+      "main": [
+        [
+          {
+            "node": "Buscar Appointment Próximo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Appointment Próximo": {
+      "main": [
+        [
+          {
+            "node": "Interpretar Resposta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Interpretar Resposta": {
+      "main": [
+        [
+          {
+            "node": "Switch Resposta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch Resposta": {
+      "main": [
+        [
+          {
+            "node": "Confirmar Presença",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Chamar WF 02",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Chamar WF 05",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Enviar Lembrete 24h": {
+      "main": [
+        [
+          {
+            "node": "Error Handler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar Lembrete 2h": {
+      "main": [
+        [
+          {
+            "node": "Error Handler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Avisar Profissional 1h": {
+      "main": [
+        [
+          {
+            "node": "Error Handler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Confirmar Presença": {
+      "main": [
+        [
+          {
+            "node": "Error Handler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chamar WF 02": {
+      "main": [
+        [
+          {
+            "node": "Error Handler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chamar WF 05": {
+      "main": [
+        [
+          {
+            "node": "Error Handler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

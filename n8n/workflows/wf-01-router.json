@@ -1,0 +1,435 @@
+{
+  "name": "SkinnIA — Roteador Central",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "nodes": [
+    {
+      "id": "webhook-router",
+      "name": "Webhook Inbound",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-1180, 20],
+      "parameters": {
+        "path": "whatsapp-inbound",
+        "httpMethod": "POST",
+        "responseMode": "onReceived"
+      }
+    },
+    {
+      "id": "normalize-payload",
+      "name": "Normalizar Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-960, 20],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const body = $json.body ?? $json;\nconst instance = body.instance;\nconst remoteJid = body.data?.key?.remoteJid ?? '';\nconst phone = remoteJid.replace(/@s\\.whatsapp\\.net$/, '');\nconst message = body.data?.message?.conversation ?? body.data?.message?.extendedTextMessage?.text ?? '';\nreturn [{ json: { instance, phone, pushName: body.data?.pushName ?? 'Cliente', message, raw: body } }];"
+      }
+    },
+    {
+      "id": "find-tenant",
+      "name": "Buscar Tenant",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [-740, 20],
+      "parameters": {
+        "method": "GET",
+        "url": "={{$env.NEXT_PUBLIC_SUPABASE_URL}}/rest/v1/organizations?select=id,name,slug,whatsapp_instance&whatsapp_instance=eq.{{$json.instance}}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{$env.SUPABASE_SERVICE_ROLE_KEY}}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{$env.SUPABASE_SERVICE_ROLE_KEY}}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "if-tenant-found",
+      "name": "Tenant Encontrado?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [-520, 20],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{Array.isArray($json) ? $json.length : 0}}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "larger"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "hydrate-context",
+      "name": "Montar Contexto",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-300, 20],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const tenant = Array.isArray($input.item.json) ? $input.item.json[0] : ($json[0] ?? $json);\nconst normalized = $('Normalizar Payload').first().json;\nreturn [{ json: { ...normalized, organization_id: tenant.id, organization_name: tenant.name, thread_status: 'bot' } }];"
+      }
+    },
+    {
+      "id": "persist-inbound",
+      "name": "Salvar Cliente/Thread/Mensagem",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [-80, 20],
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.N8N_BASE_URL}}/webhook/internal-router-persist",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{$json}}"
+      }
+    },
+    {
+      "id": "classify-intent",
+      "name": "Classificar Intenção",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [140, 20],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const message = ($json.message ?? '').toLowerCase();\nlet intent = 'agent';\nif (/agendar|marcar|hor[aá]rio/.test(message)) intent = 'schedule';\nelse if (/cancelar|desmarcar/.test(message)) intent = 'cancel';\nelse if (/pagar|pagamento|pix/.test(message)) intent = 'payment';\nelse if (/confirmar|confirmado|sim/.test(message)) intent = 'confirmation';\nreturn [{ json: { ...$json, intent } }];"
+      }
+    },
+    {
+      "id": "switch-intent",
+      "name": "Rotear Intenção",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [360, 20],
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{$json.intent}}",
+        "rules": [
+          {
+            "operation": "equal",
+            "value2": "schedule"
+          },
+          {
+            "operation": "equal",
+            "value2": "cancel"
+          },
+          {
+            "operation": "equal",
+            "value2": "payment"
+          },
+          {
+            "operation": "equal",
+            "value2": "confirmation"
+          }
+        ]
+      }
+    },
+    {
+      "id": "trigger-schedule",
+      "name": "Disparar WF 02",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [610, -190],
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.N8N_WEBHOOK_BASE}}/schedule-request",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{$json}}"
+      }
+    },
+    {
+      "id": "trigger-cancel",
+      "name": "Disparar WF 05",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [610, -60],
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.N8N_WEBHOOK_BASE}}/cancellation-request",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{$json}}"
+      }
+    },
+    {
+      "id": "trigger-payment",
+      "name": "Disparar WF 03",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [610, 70],
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.N8N_BASE_URL}}/webhook/internal/payment-request",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{$json}}"
+      }
+    },
+    {
+      "id": "trigger-confirmation",
+      "name": "Disparar WF 04",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [610, 200],
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.N8N_WEBHOOK_BASE}}/confirmation-response",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{$json}}"
+      }
+    },
+    {
+      "id": "trigger-agent",
+      "name": "Disparar Agente Claude",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [610, 340],
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.N8N_BASE_URL}}/webhook/internal/agent-message",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{$json}}"
+      }
+    },
+    {
+      "id": "log-run",
+      "name": "Salvar Automation Run",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [860, 20],
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.N8N_BASE_URL}}/webhook/internal/log-automation",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { organization_id: $json.organization_id, workflow_name: 'SkinnIA — Roteador Central', trigger_type: 'webhook', input: $json } }}"
+      }
+    },
+    {
+      "id": "error-handler",
+      "name": "Error Handler",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1080, 20],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "return [{ json: { ok: true, workflow: 'wf-01-router', handledAt: new Date().toISOString() } }];"
+      }
+    }
+  ],
+  "connections": {
+    "Webhook Inbound": {
+      "main": [
+        [
+          {
+            "node": "Normalizar Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalizar Payload": {
+      "main": [
+        [
+          {
+            "node": "Buscar Tenant",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Tenant": {
+      "main": [
+        [
+          {
+            "node": "Tenant Encontrado?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tenant Encontrado?": {
+      "main": [
+        [
+          {
+            "node": "Montar Contexto",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Montar Contexto": {
+      "main": [
+        [
+          {
+            "node": "Salvar Cliente/Thread/Mensagem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Salvar Cliente/Thread/Mensagem": {
+      "main": [
+        [
+          {
+            "node": "Classificar Intenção",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Classificar Intenção": {
+      "main": [
+        [
+          {
+            "node": "Rotear Intenção",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rotear Intenção": {
+      "main": [
+        [
+          {
+            "node": "Disparar WF 02",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Disparar WF 05",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Disparar WF 03",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Disparar WF 04",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Disparar Agente Claude",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Disparar WF 02": {
+      "main": [
+        [
+          {
+            "node": "Salvar Automation Run",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Disparar WF 05": {
+      "main": [
+        [
+          {
+            "node": "Salvar Automation Run",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Disparar WF 03": {
+      "main": [
+        [
+          {
+            "node": "Salvar Automation Run",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Disparar WF 04": {
+      "main": [
+        [
+          {
+            "node": "Salvar Automation Run",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Disparar Agente Claude": {
+      "main": [
+        [
+          {
+            "node": "Salvar Automation Run",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Salvar Automation Run": {
+      "main": [
+        [
+          {
+            "node": "Error Handler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

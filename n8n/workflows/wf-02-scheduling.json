@@ -1,0 +1,449 @@
+{
+  "name": "SkinnIA — Agendamento",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "nodes": [
+    {
+      "id": "webhook-schedule",
+      "name": "Webhook Schedule Request",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-1140, 20],
+      "parameters": {
+        "path": "schedule-request",
+        "httpMethod": "POST",
+        "responseMode": "onReceived"
+      }
+    },
+    {
+      "id": "extract-entities",
+      "name": "Extrair Entidades Claude",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [-910, 20],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "={{$env.ANTHROPIC_API_KEY}}"
+            },
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { model: $env.ANTHROPIC_MODEL || 'claude-3-5-sonnet-latest', max_tokens: 180, system: 'Extraia do texto serviço solicitado, data preferida e profissional preferido. Retorne JSON com service_hint, date_hint e professional_hint.', messages: [{ role: 'user', content: $json.message }] } }}"
+      }
+    },
+    {
+      "id": "parse-entities",
+      "name": "Parsear JSON",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-680, 20],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const source = $('Webhook Schedule Request').first().json.body ?? $('Webhook Schedule Request').first().json;\nconst text = $json.content?.[0]?.text ?? '{}';\nlet parsed = {};\ntry { parsed = JSON.parse(text); } catch {}\nreturn [{ json: { ...source, ...parsed } }];"
+      }
+    },
+    {
+      "id": "list-services",
+      "name": "Listar Serviços",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [-450, 20],
+      "parameters": {
+        "method": "GET",
+        "url": "={{$env.NEXT_PUBLIC_SUPABASE_URL}}/rest/v1/services?select=id,name,price,deposit_required,deposit_amount,duration_minutes,is_active,color&organization_id=eq.{{$json.organization_id}}&is_active=eq.true",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{$env.SUPABASE_SERVICE_ROLE_KEY}}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{$env.SUPABASE_SERVICE_ROLE_KEY}}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "match-service",
+      "name": "Fuzzy Match Serviço",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-220, 20],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const original = $('Parsear JSON').first().json;\nconst services = Array.isArray($json) ? $json : [];\nconst hint = (original.service_hint ?? '').toLowerCase();\nconst match = services.find((service) => service.name.toLowerCase().includes(hint)) ?? services[0] ?? null;\nreturn [{ json: { ...original, services, selected_service: match } }];"
+      }
+    },
+    {
+      "id": "if-service-found",
+      "name": "Serviço Encontrado?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [10, 20],
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "leftValue": "={{Boolean($json.selected_service)}}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equal"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "check-availability",
+      "name": "Consultar Disponibilidade",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [240, -80],
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.NEXT_PUBLIC_APP_URL}}/api/check-availability",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { organization_id: $json.organization_id, professional_id: $json.professional_id || $('Parsear JSON').first().json.professional_id || '', service_id: $json.selected_service.id, date: $json.date_hint || new Date().toISOString().slice(0,10) } }}"
+      }
+    },
+    {
+      "id": "if-slots-found",
+      "name": "Slots Disponíveis?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [470, -80],
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "leftValue": "={{($json.filter(slot => slot.available)).length}}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "larger"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "send-options",
+      "name": "Enviar Opções WhatsApp",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [700, -170],
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.EVOLUTION_API_URL}}/message/sendText/{{$env.SKINNIA_INSTANCE || 'default'}}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{$env.EVOLUTION_API_KEY}}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { number: $('Parsear JSON').first().json.phone, text: 'Encontrei horários disponíveis. Responda com 1, 2 ou 3 para confirmar a opção.' } }}"
+      }
+    },
+    {
+      "id": "save-thread-context",
+      "name": "Salvar Contexto Thread",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [930, -170],
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.N8N_BASE_URL}}/webhook/internal/thread-context",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { thread_id: $('Parsear JSON').first().json.thread_id, options: $json.filter(slot => slot.available).slice(0,3), service: $('Fuzzy Match Serviço').first().json.selected_service } }}"
+      }
+    },
+    {
+      "id": "create-draft",
+      "name": "Criar Pré-reserva",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [700, 100],
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.N8N_BASE_URL}}/webhook/internal/create-appointment-draft",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { organization_id: $json.organization_id, client_id: $json.client_id, service: $json.selected_service, message: $json.message } }}"
+      }
+    },
+    {
+      "id": "if-needs-deposit",
+      "name": "Precisa Sinal?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [930, 100],
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "leftValue": "={{Boolean($json.selected_service?.deposit_required)}}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equal"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "trigger-payment",
+      "name": "Chamar WF 03",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1160, 30],
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.N8N_BASE_URL}}/webhook/internal/payment-request",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{$json}}"
+      }
+    },
+    {
+      "id": "confirm-direct",
+      "name": "Confirmar Direto",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1160, 180],
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.N8N_BASE_URL}}/webhook/internal/confirm-appointment",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{$json}}"
+      }
+    },
+    {
+      "id": "error-handler",
+      "name": "Error Handler",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1390, 100],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "return [{ json: { ok: true, workflow: 'wf-02-scheduling', handledAt: new Date().toISOString() } }];"
+      }
+    }
+  ],
+  "connections": {
+    "Webhook Schedule Request": {
+      "main": [
+        [
+          {
+            "node": "Extrair Entidades Claude",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extrair Entidades Claude": {
+      "main": [
+        [
+          {
+            "node": "Parsear JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parsear JSON": {
+      "main": [
+        [
+          {
+            "node": "Listar Serviços",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Listar Serviços": {
+      "main": [
+        [
+          {
+            "node": "Fuzzy Match Serviço",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fuzzy Match Serviço": {
+      "main": [
+        [
+          {
+            "node": "Serviço Encontrado?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Serviço Encontrado?": {
+      "main": [
+        [
+          {
+            "node": "Consultar Disponibilidade",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error Handler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consultar Disponibilidade": {
+      "main": [
+        [
+          {
+            "node": "Slots Disponíveis?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slots Disponíveis?": {
+      "main": [
+        [
+          {
+            "node": "Enviar Opções WhatsApp",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Criar Pré-reserva",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar Opções WhatsApp": {
+      "main": [
+        [
+          {
+            "node": "Salvar Contexto Thread",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Criar Pré-reserva": {
+      "main": [
+        [
+          {
+            "node": "Precisa Sinal?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Precisa Sinal?": {
+      "main": [
+        [
+          {
+            "node": "Chamar WF 03",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Confirmar Direto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Salvar Contexto Thread": {
+      "main": [
+        [
+          {
+            "node": "Error Handler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chamar WF 03": {
+      "main": [
+        [
+          {
+            "node": "Error Handler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Confirmar Direto": {
+      "main": [
+        [
+          {
+            "node": "Error Handler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

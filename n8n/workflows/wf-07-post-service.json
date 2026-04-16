@@ -1,0 +1,344 @@
+{
+  "name": "SkinnIA — Pós-Atendimento",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "nodes": [
+    {
+      "id": "webhook-completed",
+      "name": "Webhook Appointment Completed",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-1140, -100],
+      "parameters": {
+        "path": "appointment-completed",
+        "httpMethod": "POST",
+        "responseMode": "onReceived"
+      }
+    },
+    {
+      "id": "schedule-completed",
+      "name": "Cron 30min",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [-1140, 140],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "*/30 * * * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "fetch-completed",
+      "name": "Buscar Appointments Concluídos",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [-900, 20],
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.N8N_BASE_URL}}/webhook/internal/post-service-candidates",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{$json.body ?? { scheduled: true }}}"
+      }
+    },
+    {
+      "id": "wait-3h",
+      "name": "Aguardar 3h",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [-660, 20],
+      "parameters": {
+        "unit": "hours",
+        "amount": 3
+      }
+    },
+    {
+      "id": "fetch-context",
+      "name": "Buscar Contexto Completo",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [-420, 20],
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.N8N_BASE_URL}}/webhook/internal/post-service-context",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{$json}}"
+      }
+    },
+    {
+      "id": "send-nps",
+      "name": "Enviar NPS",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [-180, 20],
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.EVOLUTION_API_URL}}/message/sendText/{{$env.SKINNIA_INSTANCE || 'default'}}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{$env.EVOLUTION_API_KEY}}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { number: $json.phone, text: `Oi ${$json.client_name}! Como foi seu ${$json.service_name} com a ${$json.professional_name}? De 0 a 10, quanto você recomendaria nosso atendimento?` } }}"
+      }
+    },
+    {
+      "id": "wait-30m",
+      "name": "Aguardar 30min",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [60, 20],
+      "parameters": {
+        "unit": "minutes",
+        "amount": 30
+      }
+    },
+    {
+      "id": "evaluate-nps",
+      "name": "Avaliar NPS",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [300, 20],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const score = Number($json.nps_score ?? 10);\nconst followUp = score >= 9 ? 'review' : (score < 7 ? 'recover' : 'neutral');\nreturn [{ json: { ...$json, followUp } }];"
+      }
+    },
+    {
+      "id": "send-review-followup",
+      "name": "Enviar Follow-up",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [540, 20],
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.EVOLUTION_API_URL}}/message/sendText/{{$env.SKINNIA_INSTANCE || 'default'}}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{$env.EVOLUTION_API_KEY}}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { number: $json.phone, text: $json.followUp === 'review' ? `Que ótimo! Se puder, deixa uma avaliação aqui: ${$json.google_review_url || 'https://google.com'}` : ($json.followUp === 'recover' ? 'Senti que não foi perfeito. Pode me contar o que aconteceu? Quero resolver isso pra você.' : 'Obrigada pela resposta. Ficamos felizes em te atender!') } }}"
+      }
+    },
+    {
+      "id": "wait-24h",
+      "name": "Aguardar 24h",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [780, 20],
+      "parameters": {
+        "unit": "hours",
+        "amount": 24
+      }
+    },
+    {
+      "id": "send-rebooking",
+      "name": "Enviar Rebooking",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1020, 20],
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.EVOLUTION_API_URL}}/message/sendText/{{$env.SKINNIA_INSTANCE || 'default'}}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{$env.EVOLUTION_API_KEY}}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { number: $json.phone, text: `Ei ${$json.client_name}! Já pensando na próxima ${$json.service_name}? O ideal é retornar em cerca de ${$json.rebooking_days || 21} dias. Se quiser, responde SIM e eu já organizo tudo.` } }}"
+      }
+    },
+    {
+      "id": "log-run",
+      "name": "Logar Workflow",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1260, 20],
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.N8N_BASE_URL}}/webhook/internal/log-automation",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { organization_id: $json.organization_id, workflow_name: 'SkinnIA — Pós-Atendimento', trigger_type: 'webhook' } }}"
+      }
+    },
+    {
+      "id": "error-handler",
+      "name": "Error Handler",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1500, 20],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "return [{ json: { ok: true, workflow: 'wf-07-post-service', handledAt: new Date().toISOString() } }];"
+      }
+    }
+  ],
+  "connections": {
+    "Webhook Appointment Completed": {
+      "main": [
+        [
+          {
+            "node": "Buscar Appointments Concluídos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cron 30min": {
+      "main": [
+        [
+          {
+            "node": "Buscar Appointments Concluídos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Appointments Concluídos": {
+      "main": [
+        [
+          {
+            "node": "Aguardar 3h",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aguardar 3h": {
+      "main": [
+        [
+          {
+            "node": "Buscar Contexto Completo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Contexto Completo": {
+      "main": [
+        [
+          {
+            "node": "Enviar NPS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar NPS": {
+      "main": [
+        [
+          {
+            "node": "Aguardar 30min",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aguardar 30min": {
+      "main": [
+        [
+          {
+            "node": "Avaliar NPS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Avaliar NPS": {
+      "main": [
+        [
+          {
+            "node": "Enviar Follow-up",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar Follow-up": {
+      "main": [
+        [
+          {
+            "node": "Aguardar 24h",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aguardar 24h": {
+      "main": [
+        [
+          {
+            "node": "Enviar Rebooking",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar Rebooking": {
+      "main": [
+        [
+          {
+            "node": "Logar Workflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Logar Workflow": {
+      "main": [
+        [
+          {
+            "node": "Error Handler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

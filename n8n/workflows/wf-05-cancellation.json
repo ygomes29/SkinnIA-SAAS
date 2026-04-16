@@ -1,0 +1,355 @@
+{
+  "name": "SkinnIA — Cancelamento",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "nodes": [
+    {
+      "id": "webhook-cancel",
+      "name": "Webhook Cancellation Request",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-1100, 20],
+      "parameters": {
+        "path": "cancellation-request",
+        "httpMethod": "POST",
+        "responseMode": "onReceived"
+      }
+    },
+    {
+      "id": "load-context",
+      "name": "Buscar Appointment + Service + Payments",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [-860, 20],
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.N8N_BASE_URL}}/webhook/internal/cancellation-context",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{$json.body ?? $json}}"
+      }
+    },
+    {
+      "id": "calculate-policy",
+      "name": "Calcular Política",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-620, 20],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const startAt = new Date($json.appointment.start_at).getTime();\nconst now = Date.now();\nconst hoursUntil = (startAt - now) / 3600000;\nconst cancellationHours = Number($json.service.cancellation_policy_hours ?? 24);\nlet decision = 'retain';\nif (hoursUntil >= cancellationHours) decision = 'refund';\nelse if (hoursUntil >= cancellationHours / 2) decision = 'credit';\nreturn [{ json: { ...$json, hoursUntil, decision } }];"
+      }
+    },
+    {
+      "id": "switch-decision",
+      "name": "Switch Política",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [-380, 20],
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{$json.decision}}",
+        "rules": [
+          {
+            "operation": "equal",
+            "value2": "refund"
+          },
+          {
+            "operation": "equal",
+            "value2": "credit"
+          }
+        ]
+      }
+    },
+    {
+      "id": "refund-payment",
+      "name": "Estornar no Mercado Pago",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [-120, -90],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.mercadopago.com/v1/payments/{{$json.payments[0].provider_payment_id}}/refunds",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{$env.MERCADOPAGO_ACCESS_TOKEN}}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { amount: $json.payments[0].amount } }}"
+      }
+    },
+    {
+      "id": "create-credit",
+      "name": "Gerar Crédito",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [-120, 20],
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.NEXT_PUBLIC_SUPABASE_URL}}/rest/v1/wallet_credits",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{$env.SUPABASE_SERVICE_ROLE_KEY}}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{$env.SUPABASE_SERVICE_ROLE_KEY}}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { organization_id: $json.organization_id, client_id: $json.appointment.client_id, amount: $json.payments[0].amount, origin_payment_id: $json.payments[0].id } }}"
+      }
+    },
+    {
+      "id": "retain-note",
+      "name": "Registrar Retenção",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [-120, 140],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "name": "penalty_mode",
+              "value": "retain",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "update-appointment",
+      "name": "Atualizar Appointment",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [140, 20],
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{$env.NEXT_PUBLIC_APP_URL}}/api/appointments/{{$('Buscar Appointment + Service + Payments').first().json.appointment.id}}/status",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { status: 'cancelled', reason: $('Webhook Cancellation Request').first().json.body.reason || 'client_request' } }}"
+      }
+    },
+    {
+      "id": "notify-client",
+      "name": "Notificar Cliente",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [380, -20],
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.EVOLUTION_API_URL}}/message/sendText/{{$env.SKINNIA_INSTANCE || 'default'}}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{$env.EVOLUTION_API_KEY}}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { number: $json.client_phone, text: $json.decision === 'refund' ? `Cancelamento confirmado. Seu reembolso de R$ ${$json.payments[0].amount} será processado em até 5 dias úteis.` : ($json.decision === 'credit' ? `Cancelamento confirmado. Geramos um crédito de R$ ${$json.payments[0].amount} para usar no próximo agendamento.` : `Cancelamento confirmado. Pela política do serviço, o sinal não é reembolsável nesta janela.`) } }}"
+      }
+    },
+    {
+      "id": "notify-professional",
+      "name": "Notificar Profissional",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [620, -20],
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.N8N_BASE_URL}}/webhook/internal/notify-professional",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{$json}}"
+      }
+    },
+    {
+      "id": "log-run",
+      "name": "Logar Workflow",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [860, -20],
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.N8N_BASE_URL}}/webhook/internal/log-automation",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { organization_id: $json.organization_id, workflow_name: 'SkinnIA — Cancelamento', trigger_type: 'webhook', input: $('Webhook Cancellation Request').first().json.body, output: { decision: $json.decision } } }}"
+      }
+    },
+    {
+      "id": "error-handler",
+      "name": "Error Handler",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1100, -20],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "return [{ json: { ok: true, workflow: 'wf-05-cancellation', handledAt: new Date().toISOString() } }];"
+      }
+    }
+  ],
+  "connections": {
+    "Webhook Cancellation Request": {
+      "main": [
+        [
+          {
+            "node": "Buscar Appointment + Service + Payments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Appointment + Service + Payments": {
+      "main": [
+        [
+          {
+            "node": "Calcular Política",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calcular Política": {
+      "main": [
+        [
+          {
+            "node": "Switch Política",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch Política": {
+      "main": [
+        [
+          {
+            "node": "Estornar no Mercado Pago",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Gerar Crédito",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Registrar Retenção",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Estornar no Mercado Pago": {
+      "main": [
+        [
+          {
+            "node": "Atualizar Appointment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gerar Crédito": {
+      "main": [
+        [
+          {
+            "node": "Atualizar Appointment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Registrar Retenção": {
+      "main": [
+        [
+          {
+            "node": "Atualizar Appointment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Atualizar Appointment": {
+      "main": [
+        [
+          {
+            "node": "Notificar Cliente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notificar Cliente": {
+      "main": [
+        [
+          {
+            "node": "Notificar Profissional",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notificar Profissional": {
+      "main": [
+        [
+          {
+            "node": "Logar Workflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Logar Workflow": {
+      "main": [
+        [
+          {
+            "node": "Error Handler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

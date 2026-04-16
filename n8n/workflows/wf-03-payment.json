@@ -1,0 +1,388 @@
+{
+  "name": "SkinnIA — Cobrança de Sinal",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "nodes": [
+    {
+      "id": "webhook-payment-request",
+      "name": "Webhook Payment Request",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-1060, 20],
+      "parameters": {
+        "path": "internal/payment-request",
+        "httpMethod": "POST",
+        "responseMode": "onReceived"
+      }
+    },
+    {
+      "id": "mark-pending",
+      "name": "Marcar Pending Payment",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [-830, 20],
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{$env.NEXT_PUBLIC_SUPABASE_URL}}/rest/v1/appointments?id=eq.{{$json.body.appointment_id}}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{$env.SUPABASE_SERVICE_ROLE_KEY}}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{$env.SUPABASE_SERVICE_ROLE_KEY}}"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { status: 'pending_payment' } }}"
+      }
+    },
+    {
+      "id": "create-pix",
+      "name": "Gerar Pix Mercado Pago",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [-600, 20],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.mercadopago.com/v1/payments",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{$env.MERCADOPAGO_ACCESS_TOKEN}}"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { transaction_amount: $json.body.amount, payment_method_id: 'pix', description: `Sinal — ${$json.body.service_name}`, payer: { email: 'cliente@skinnia.app' }, external_reference: $json.body.appointment_id, date_of_expiration: new Date(Date.now() + 30 * 60 * 1000).toISOString() } }}"
+      }
+    },
+    {
+      "id": "persist-payment",
+      "name": "Persistir Payment",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [-370, 20],
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.NEXT_PUBLIC_SUPABASE_URL}}/rest/v1/payments",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{$env.SUPABASE_SERVICE_ROLE_KEY}}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{$env.SUPABASE_SERVICE_ROLE_KEY}}"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { organization_id: $('Webhook Payment Request').first().json.body.organization_id, appointment_id: $('Webhook Payment Request').first().json.body.appointment_id, client_id: $('Webhook Payment Request').first().json.body.client_id, amount: $('Webhook Payment Request').first().json.body.amount, type: 'deposit', method: 'pix', status: 'pending', provider: 'mercadopago', provider_payment_id: $json.id, provider_payment_intent: $json.id, pix_qr_code: $json.point_of_interaction?.transaction_data?.qr_code ?? null, pix_qr_code_base64: $json.point_of_interaction?.transaction_data?.qr_code_base64 ?? null, pix_expires_at: $json.date_of_expiration ?? null, metadata: $json } }}"
+      }
+    },
+    {
+      "id": "send-whatsapp",
+      "name": "Enviar Pix no WhatsApp",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [-140, 20],
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.EVOLUTION_API_URL}}/message/sendText/{{$env.SKINNIA_INSTANCE || 'default'}}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{$env.EVOLUTION_API_KEY}}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { number: $('Webhook Payment Request').first().json.body.phone, text: `✅ Horário pré-reservado!\\n\\nServiço: ${$('Webhook Payment Request').first().json.body.service_name}\\nProfissional: ${$('Webhook Payment Request').first().json.body.professional_name}\\nSinal agora: R$ ${$('Webhook Payment Request').first().json.body.amount}\\n\\nPague via Pix e confirme seu horário.` } }}"
+      }
+    },
+    {
+      "id": "wait-expire",
+      "name": "Aguardar Expiração",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [80, 20],
+      "parameters": {
+        "unit": "minutes",
+        "amount": 35
+      }
+    },
+    {
+      "id": "check-payment-status",
+      "name": "Revalidar Payment",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [300, 20],
+      "parameters": {
+        "method": "GET",
+        "url": "={{$env.NEXT_PUBLIC_SUPABASE_URL}}/rest/v1/payments?select=id,status,appointment_id&appointment_id=eq.{{$('Webhook Payment Request').first().json.body.appointment_id}}&status=eq.pending",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{$env.SUPABASE_SERVICE_ROLE_KEY}}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{$env.SUPABASE_SERVICE_ROLE_KEY}}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "if-still-pending",
+      "name": "Ainda Pending?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [520, 20],
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "leftValue": "={{Array.isArray($json) ? $json.length : 0}}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "larger"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "cancel-appointment",
+      "name": "Cancelar Agendamento",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [740, -60],
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{$env.NEXT_PUBLIC_APP_URL}}/api/appointments/{{$('Webhook Payment Request').first().json.body.appointment_id}}/status",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { status: 'cancelled', reason: 'deposit_expired' } }}"
+      }
+    },
+    {
+      "id": "notify-expired",
+      "name": "Notificar Expiração",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [960, -60],
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.EVOLUTION_API_URL}}/message/sendText/{{$env.SKINNIA_INSTANCE || 'default'}}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{$env.EVOLUTION_API_KEY}}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { number: $('Webhook Payment Request').first().json.body.phone, text: 'O Pix expirou e o horário foi liberado automaticamente. Se quiser, me chama aqui que eu encontro outra opção para você.' } }}"
+      }
+    },
+    {
+      "id": "log-run",
+      "name": "Logar Workflow",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [740, 170],
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.N8N_BASE_URL}}/webhook/internal/log-automation",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { organization_id: $('Webhook Payment Request').first().json.body.organization_id, workflow_name: 'SkinnIA — Cobrança de Sinal', trigger_type: 'internal', input: $('Webhook Payment Request').first().json.body } }}"
+      }
+    },
+    {
+      "id": "error-handler",
+      "name": "Error Handler",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1180, 60],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "return [{ json: { ok: true, workflow: 'wf-03-payment', handledAt: new Date().toISOString() } }];"
+      }
+    }
+  ],
+  "connections": {
+    "Webhook Payment Request": {
+      "main": [
+        [
+          {
+            "node": "Marcar Pending Payment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Marcar Pending Payment": {
+      "main": [
+        [
+          {
+            "node": "Gerar Pix Mercado Pago",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gerar Pix Mercado Pago": {
+      "main": [
+        [
+          {
+            "node": "Persistir Payment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Persistir Payment": {
+      "main": [
+        [
+          {
+            "node": "Enviar Pix no WhatsApp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar Pix no WhatsApp": {
+      "main": [
+        [
+          {
+            "node": "Aguardar Expiração",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aguardar Expiração": {
+      "main": [
+        [
+          {
+            "node": "Revalidar Payment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Revalidar Payment": {
+      "main": [
+        [
+          {
+            "node": "Ainda Pending?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ainda Pending?": {
+      "main": [
+        [
+          {
+            "node": "Cancelar Agendamento",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Logar Workflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cancelar Agendamento": {
+      "main": [
+        [
+          {
+            "node": "Notificar Expiração",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notificar Expiração": {
+      "main": [
+        [
+          {
+            "node": "Logar Workflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Logar Workflow": {
+      "main": [
+        [
+          {
+            "node": "Error Handler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

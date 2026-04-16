@@ -1,0 +1,215 @@
+{
+  "name": "SkinnIA — Reativação de Inativos",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "nodes": [
+    {
+      "id": "schedule-reactivation",
+      "name": "Cron Diário 10h",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [-980, 20],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 10 * * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "fetch-orgs",
+      "name": "Buscar Organizações Ativas",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [-740, 20],
+      "parameters": {
+        "method": "GET",
+        "url": "={{$env.NEXT_PUBLIC_SUPABASE_URL}}/rest/v1/organizations?select=id,name,slug,settings,plan,trial_ends_at&or=(plan.in.(starter,pro,enterprise),and(plan.eq.trial,trial_ends_at.gt.{{new Date().toISOString()}}))",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{$env.SUPABASE_SERVICE_ROLE_KEY}}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{$env.SUPABASE_SERVICE_ROLE_KEY}}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "fetch-inactive-clients",
+      "name": "Buscar Clientes Inativos",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [-500, 20],
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.N8N_BASE_URL}}/webhook/internal/reactivation-candidates",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { organizations: $json } }}"
+      }
+    },
+    {
+      "id": "generate-copy",
+      "name": "Gerar Mensagem Claude",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [-260, 20],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "={{$env.ANTHROPIC_API_KEY}}"
+            },
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { model: $env.ANTHROPIC_MODEL || 'claude-3-5-sonnet-latest', max_tokens: 160, system: `Você é a assistente virtual de ${$json.org_name}. Escreva uma mensagem curta e calorosa de WhatsApp para reativar cliente de beleza, no máximo 4 linhas.`, messages: [{ role: 'user', content: `Cliente ${$json.client_name}. Último serviço ${$json.last_service}. Profissional preferida ${$json.professional_name}. Dias inativo ${$json.days_inactive}.` }] } }}"
+      }
+    },
+    {
+      "id": "send-reactivation",
+      "name": "Enviar WhatsApp",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [-20, 20],
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.EVOLUTION_API_URL}}/message/sendText/{{$env.SKINNIA_INSTANCE || 'default'}}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{$env.EVOLUTION_API_KEY}}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { number: $('Buscar Clientes Inativos').first().json.phone, text: $json.content?.[0]?.text ?? 'Oi! Faz um tempinho que você não vem. Se quiser, eu te ajudo a agendar um horário especial essa semana.' } }}"
+      }
+    },
+    {
+      "id": "log-run",
+      "name": "Logar Workflow",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [220, 20],
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.N8N_BASE_URL}}/webhook/internal/log-automation",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { organization_id: $('Buscar Clientes Inativos').first().json.organization_id, workflow_name: 'SkinnIA — Reativação de Inativos', trigger_type: 'schedule' } }}"
+      }
+    },
+    {
+      "id": "error-handler",
+      "name": "Error Handler",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 20],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "return [{ json: { ok: true, workflow: 'wf-06-reactivation', handledAt: new Date().toISOString() } }];"
+      }
+    }
+  ],
+  "connections": {
+    "Cron Diário 10h": {
+      "main": [
+        [
+          {
+            "node": "Buscar Organizações Ativas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Organizações Ativas": {
+      "main": [
+        [
+          {
+            "node": "Buscar Clientes Inativos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Clientes Inativos": {
+      "main": [
+        [
+          {
+            "node": "Gerar Mensagem Claude",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gerar Mensagem Claude": {
+      "main": [
+        [
+          {
+            "node": "Enviar WhatsApp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar WhatsApp": {
+      "main": [
+        [
+          {
+            "node": "Logar Workflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Logar Workflow": {
+      "main": [
+        [
+          {
+            "node": "Error Handler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
