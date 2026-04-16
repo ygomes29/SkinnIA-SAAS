@@ -15,7 +15,7 @@ export function Avatar({
     return (
       <Image
         alt={name}
-        className={cn("h-10 w-10 rounded-2xl object-cover", className)}
+        className={cn("h-10 w-10 rounded-2xl object-cover ring-1 ring-violet-500/20", className)}
         height={40}
         src={imageUrl}
         width={40}
@@ -33,7 +33,7 @@ export function Avatar({
   return (
     <div
       className={cn(
-        "flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-pink/40 to-brand-purple/40 text-sm font-semibold text-white ring-1 ring-white/10",
+        "flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-violet/45 to-brand-cyan/35 text-sm font-semibold text-white ring-1 ring-violet-500/20",
         className
       )}
     >

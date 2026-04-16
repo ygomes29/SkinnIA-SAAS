@@ -9,7 +9,7 @@ import {
   mockProfessionals,
   mockServices
 } from "@/lib/mock-data";
-import type { Appointment, AutomationRun, Client, MetricDaily, Professional, Service } from "@/types/skinnia";
+import type { AgentConfig, Appointment, AutomationRun, Client, MetricDaily, Organization, Professional, Service } from "@/types/skinnia";
 
 function todayIsoDate() {
   return new Date().toISOString().slice(0, 10);
@@ -262,6 +262,81 @@ export async function getProfessionals(): Promise<Professional[]> {
     working_hours: row.working_hours ?? {},
     blocked_times: row.blocked_times ?? []
   })) as Professional[];
+}
+
+export async function getOrganization(): Promise<Organization | null> {
+  const supabase = createSupabaseServerClient();
+  if (!supabase) return null;
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const { data: ou } = await supabase
+    .from("organization_users")
+    .select("organization_id")
+    .eq("user_id", user.id)
+    .single();
+
+  if (!ou) return null;
+
+  const { data, error } = await supabase
+    .from("organizations")
+    .select("*")
+    .eq("id", ou.organization_id)
+    .single();
+
+  if (error || !data) return null;
+  return data as Organization;
+}
+
+export async function getAgentConfigs(): Promise<AgentConfig[]> {
+  const supabase = createSupabaseServerClient();
+  if (!supabase) return [];
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  const { data: ou } = await supabase
+    .from("organization_users")
+    .select("organization_id")
+    .eq("user_id", user.id)
+    .single();
+
+  if (!ou) return [];
+
+  const { data, error } = await supabase
+    .from("agent_configs")
+    .select("*")
+    .eq("organization_id", ou.organization_id)
+    .order("agent_key");
+
+  if (error || !data) return [];
+  return data as AgentConfig[];
+}
+
+export async function getMessageTemplates() {
+  const supabase = createSupabaseServerClient();
+  if (!supabase) return [];
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  const { data: ou } = await supabase
+    .from("organization_users")
+    .select("organization_id")
+    .eq("user_id", user.id)
+    .single();
+
+  if (!ou) return [];
+
+  const { data, error } = await supabase
+    .from("message_templates")
+    .select("id, key, title, body, variables")
+    .eq("organization_id", ou.organization_id)
+    .order("key");
+
+  if (error || !data) return [];
+  return data as { id: string; key: string; title: string; body: string; variables: string[] }[];
 }
 
 export async function getServices(): Promise<Service[]> {

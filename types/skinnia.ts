@@ -190,3 +190,15 @@ export interface AgentResponse {
   message: string;
   action?: AgentActionPayload;
 }
+
+export interface AgentConfig {
+  id: string;
+  organization_id: string;
+  agent_key: string;
+  name: string;
+  tone?: string | null;
+  is_active: boolean;
+  prompt_overrides?: Record<string, unknown> | null;
+  created_at?: string;
+  updated_at?: string;
+}

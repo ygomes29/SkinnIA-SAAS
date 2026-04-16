@@ -1,9 +1,11 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
+import { getOrganization, getAgentConfigs } from "@/lib/dashboard-data";
+import { OrgSettingsForm } from "@/components/configuracoes/org-settings-form";
+import { AgentSettingsForm } from "@/components/configuracoes/agent-settings-form";
 
-export default function ConfiguracoesPage() {
+export default async function ConfiguracoesPage() {
+  const [org, agentConfigs] = await Promise.all([getOrganization(), getAgentConfigs()]);
+  const agent = agentConfigs.find((c) => c.agent_key === "atendimento") ?? null;
+
   return (
     <div className="space-y-6">
       <div>
@@ -12,31 +14,8 @@ export default function ConfiguracoesPage() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Perfil da organização</CardTitle>
-            <CardDescription>Dados usados em auth, agente e onboarding.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Input defaultValue="SkinnIA Studio" placeholder="Nome" />
-            <Input defaultValue="Belo Horizonte" placeholder="Cidade" />
-            <Input defaultValue="America/Sao_Paulo" placeholder="Timezone" />
-            <Button>Salvar dados</Button>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Agente conversacional</CardTitle>
-            <CardDescription>Tom de voz e instruções da assistente do WhatsApp.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Input defaultValue="Luna" placeholder="Nome do agente" />
-            <Input defaultValue="premium, acolhedor e objetivo" placeholder="Tom" />
-            <Textarea defaultValue="Sempre responda em português brasileiro informal, sem inventar disponibilidade e oferecendo atendimento humano quando necessário." />
-            <Button variant="secondary">Salvar prompt-base</Button>
-          </CardContent>
-        </Card>
+        <OrgSettingsForm org={org} />
+        <AgentSettingsForm agent={agent} />
       </div>
     </div>
   );

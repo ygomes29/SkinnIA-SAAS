@@ -28,20 +28,32 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="hidden h-screen w-80 shrink-0 border-r border-white/10 bg-slate-950/70 px-6 py-8 lg:flex lg:flex-col">
-      <div className="mb-10">
-        <div className="inline-flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-pink to-brand-purple text-lg font-bold text-white">
+    <aside
+      className="hidden h-screen w-72 shrink-0 flex-col border-r border-violet-500/15 bg-[#0D1226] px-5 py-7 lg:flex"
+      style={{
+        backgroundImage:
+          "linear-gradient(180deg, rgba(124,58,237,0.05) 0%, transparent 60%)"
+      }}
+    >
+      {/* Logo */}
+      <div className="mb-8">
+        <div className="inline-flex items-center gap-3 rounded-2xl border border-violet-500/15 bg-white/[0.04] px-3.5 py-2.5">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-brand-violet to-brand-cyan text-base font-bold text-white shadow-brand">
             S
           </div>
           <div>
-            <p className="text-sm uppercase tracking-[0.24em] text-slate-400">SkinnIA</p>
-            <h1 className="text-lg font-semibold text-white">Painel Operacional</h1>
+            <p className="text-[10px] font-medium uppercase tracking-[0.26em] text-[--sk-text-brand]">
+              SkinnIA
+            </p>
+            <h1 className="font-display text-base font-semibold text-white leading-tight">
+              Painel Operacional
+            </h1>
           </div>
         </div>
       </div>
 
-      <nav className="space-y-2">
+      {/* Nav */}
+      <nav className="space-y-1">
         {items.map((item) => {
           const Icon = item.icon;
           const active = pathname === item.href;
@@ -49,23 +61,41 @@ export function Sidebar() {
           return (
             <Link
               className={cn(
-                "flex items-center gap-3 rounded-2xl px-4 py-3 text-sm text-slate-300 transition-all hover:bg-white/5 hover:text-white",
-                active && "bg-white/10 text-white shadow-inner shadow-white/5"
+                "flex items-center gap-3 rounded-2xl px-3.5 py-2.5 text-sm font-medium transition-all duration-150",
+                active
+                  ? "bg-brand-violet/18 text-white ring-1 ring-brand-violet/28 shadow-[0_2px_8px_rgba(124,58,237,0.18)]"
+                  : "text-[--sk-text-muted] hover:bg-violet-500/8 hover:text-slate-200"
               )}
               href={item.href}
               key={item.href}
             >
-              <Icon className="h-5 w-5" />
+              <Icon
+                className={cn(
+                  "h-[18px] w-[18px] shrink-0",
+                  active ? "text-brand-cyan" : "text-[--sk-text-muted]"
+                )}
+              />
               <span>{item.label}</span>
+              {active && (
+                <span className="ml-auto h-1.5 w-1.5 rounded-full bg-brand-cyan" />
+              )}
             </Link>
           );
         })}
       </nav>
 
-      <div className="mt-auto rounded-[28px] border border-white/10 bg-gradient-to-br from-brand-pink/15 to-brand-purple/15 p-5">
-        <p className="text-xs uppercase tracking-[0.22em] text-pink-200/70">Plano atual</p>
-        <h2 className="mt-2 text-xl font-semibold text-white">SkinnIA Pro</h2>
-        <p className="mt-2 text-sm text-slate-300">
+      {/* Plan card */}
+      <div
+        className="mt-auto rounded-[22px] border border-violet-500/18 p-4"
+        style={{ background: "var(--sk-gradient-brand-soft)" }}
+      >
+        <p className="text-[10px] font-medium uppercase tracking-[0.24em] text-[--sk-text-brand]">
+          Plano atual
+        </p>
+        <h2 className="font-display mt-1.5 text-lg font-semibold text-white">
+          SkinnIA Pro
+        </h2>
+        <p className="mt-1.5 text-sm text-[--sk-text-secondary] leading-relaxed">
           WhatsApp ativo, automações monitoradas e painel pronto para operação multi-unidade.
         </p>
       </div>
