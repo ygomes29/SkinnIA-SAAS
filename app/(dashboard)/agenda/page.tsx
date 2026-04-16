@@ -12,7 +12,7 @@ export default async function AgendaPage() {
   return (
     <div className="space-y-6">
       <div>
-        <p className="text-sm uppercase tracking-[0.24em] text-pink-200/70">Agenda</p>
+        <p className="text-sm uppercase tracking-[0.24em] text-[--sk-text-brand]">Agenda</p>
         <h1 className="mt-2 text-3xl font-semibold text-white">
           Semana operacional com remarcação por drag-and-drop
         </h1>

@@ -54,17 +54,17 @@ export async function MetricsCards() {
 
         return (
           <Card className="overflow-hidden p-0" key={card.label}>
-            <div className="relative h-full overflow-hidden rounded-[28px] border border-white/5 bg-gradient-to-br from-white/10 to-white/[0.02] p-5">
-              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent" />
+            <div className="relative h-full overflow-hidden rounded-[28px] border border-violet-500/15 bg-gradient-to-br from-violet-500/[0.08] to-violet-500/[0.02] p-5">
+              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-violet-500/30 to-transparent" />
               <div className="mb-6 flex items-start justify-between">
-                <div className="rounded-2xl bg-white/10 p-3">
-                  <Icon className="h-5 w-5 text-white" />
+                <div className="rounded-2xl bg-brand-violet/15 p-3">
+                  <Icon className="h-5 w-5 text-brand-cyan" />
                 </div>
                 <Badge variant={card.badgeVariant}>{card.badge}</Badge>
               </div>
-              <p className="text-sm text-slate-400">{card.label}</p>
-              <p className="mt-2 text-3xl font-semibold text-white">{card.value}</p>
-              <p className="mt-3 text-sm text-slate-400">{card.detail}</p>
+              <p className="text-sm text-[--sk-text-muted]">{card.label}</p>
+              <p className="mt-2 font-display text-3xl font-semibold text-white">{card.value}</p>
+              <p className="mt-3 text-sm text-[--sk-text-secondary]">{card.detail}</p>
             </div>
           </Card>
         );

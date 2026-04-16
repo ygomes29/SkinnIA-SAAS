@@ -12,7 +12,7 @@ export default async function FinanceiroPage() {
   return (
     <div className="space-y-6">
       <div>
-        <p className="text-sm uppercase tracking-[0.24em] text-pink-200/70">Financeiro</p>
+        <p className="text-sm uppercase tracking-[0.24em] text-[--sk-text-brand]">Financeiro</p>
         <h1 className="mt-2 text-3xl font-semibold text-white">Sinais, caixa e perdas operacionais</h1>
       </div>
 

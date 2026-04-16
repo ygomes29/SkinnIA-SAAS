@@ -22,7 +22,7 @@ export function AppointmentCard({
   return (
     <button
       className={cn(
-        "w-full rounded-2xl border border-white/10 bg-slate-950/80 p-3 text-left shadow-sm transition hover:border-white/20",
+        "w-full rounded-2xl border border-violet-500/15 bg-slate-950/80 p-3 text-left shadow-sm transition hover:border-violet-500/30",
         isDragging && "opacity-50"
       )}
       onClick={(event) => {

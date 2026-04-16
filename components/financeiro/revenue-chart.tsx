@@ -39,14 +39,14 @@ export function RevenueChart({ data }: { data: MetricDaily[] }) {
             <Tooltip
               contentStyle={{
                 borderRadius: 18,
-                border: "1px solid rgba(255,255,255,0.08)",
-                background: "rgba(15,23,42,0.95)",
+                border: "1px solid rgba(124,58,237,0.20)",
+                background: "rgba(13,18,38,0.97)",
                 color: "#fff"
               }}
               formatter={(value: number, name: string) => [formatCurrency(value), name]}
             />
-            <Bar dataKey="receita" fill="#EC4899" radius={[12, 12, 4, 4]} />
-            <Bar dataKey="sinais" fill="#8B5CF6" radius={[12, 12, 4, 4]} />
+            <Bar dataKey="receita" fill="#7C3AED" radius={[12, 12, 4, 4]} />
+            <Bar dataKey="sinais" fill="#0EA5E9" radius={[12, 12, 4, 4]} />
           </BarChart>
         </ResponsiveContainer>
       </CardContent>

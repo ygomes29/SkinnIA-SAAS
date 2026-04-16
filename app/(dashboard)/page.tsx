@@ -22,11 +22,11 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-[32px] border border-white/10 bg-gradient-to-r from-white/[0.06] via-white/[0.03] to-transparent p-6">
+      <section className="rounded-[32px] border border-violet-500/15 bg-gradient-to-r from-violet-500/[0.07] via-violet-500/[0.03] to-transparent p-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="text-sm uppercase tracking-[0.24em] text-pink-200/70">Dashboard principal</p>
-            <h1 className="mt-3 text-3xl font-semibold text-white">
+            <p className="text-sm uppercase tracking-[0.24em] text-[--sk-text-brand]">Dashboard principal</p>
+            <h1 className="mt-3 font-display text-3xl font-semibold text-white">
               Operação, receita e relacionamento no mesmo lugar.
             </h1>
             <p className="mt-3 max-w-2xl text-slate-300">
@@ -67,7 +67,7 @@ export default async function DashboardPage() {
         <CardContent className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           {reactivationClients.slice(0, 4).map((client) => (
             <div
-              className="rounded-3xl border border-white/10 bg-slate-950/40 p-4"
+              className="rounded-3xl border border-violet-500/12 bg-[#0D1226]/60 p-4"
               key={client.id}
             >
               <p className="text-lg font-semibold text-white">{client.name}</p>
