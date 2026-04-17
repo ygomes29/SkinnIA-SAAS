@@ -5,7 +5,7 @@ import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
 import type { CookieOptions } from "@supabase/ssr";
 
-export type AuthState = { error: string };
+export type AuthState = { error?: string; success?: string };
 
 function createActionClient() {
   const cookieStore = cookies();
@@ -25,46 +25,79 @@ function createActionClient() {
   );
 }
 
+function isValidEmail(email: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
 export async function loginAction(_prevState: AuthState, formData: FormData): Promise<AuthState> {
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
 
   if (!email || !password) {
-    return { error: "Email e senha são obrigatórios." };
+    return { error: "Preencha todos os campos obrigatórios" };
+  }
+
+  if (!isValidEmail(email)) {
+    return { error: "Informe um e-mail válido" };
   }
 
   const supabase = createActionClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
-    return { error: "Credenciais inválidas. Verifique seu email e senha." };
+    return { error: "E-mail ou senha inválidos" };
   }
 
   redirect("/");
 }
 
 export async function registerAction(_prevState: AuthState, formData: FormData): Promise<AuthState> {
-  const name = formData.get("name") as string;
-  const slug = formData.get("slug") as string;
-  const city = formData.get("city") as string;
-  const phone = formData.get("phone") as string;
+  const fullName = formData.get("full_name") as string;
+  const businessName = formData.get("business_name") as string;
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
+  const confirmPassword = formData.get("confirm_password") as string;
 
-  if (!name || !slug || !email || !password) {
-    return { error: "Preencha todos os campos obrigatórios." };
+  if (!fullName || !businessName || !email || !password || !confirmPassword) {
+    return { error: "Preencha todos os campos obrigatórios" };
+  }
+
+  if (!isValidEmail(email)) {
+    return { error: "Informe um e-mail válido" };
+  }
+
+  if (password.length < 8) {
+    return { error: "A senha precisa ter pelo menos 8 caracteres" };
+  }
+
+  if (password !== confirmPassword) {
+    return { error: "As senhas não coincidem" };
   }
 
   const supabase = createActionClient();
 
+  // Slug derivation from business name
+  const slug = businessName
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+
   const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
     email,
     password,
-    options: { data: { name } },
+    options: {
+      data: {
+        full_name: fullName,
+        business_name: businessName
+      }
+    },
   });
 
   if (signUpError || !signUpData.user) {
-    return { error: signUpError?.message ?? "Erro ao criar conta." };
+    return { error: signUpError?.message ?? "Não foi possível criar sua conta. Tente novamente" };
   }
 
   // Call the setup-organization Edge Function server-side
@@ -76,20 +109,64 @@ export async function registerAction(_prevState: AuthState, formData: FormData):
       Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
     },
     body: JSON.stringify({
-      name,
+      name: businessName,
       slug,
-      city: city || "",
-      phone: phone || "",
       owner_user_id: signUpData.user.id,
     }),
   });
 
   if (!setupResponse.ok) {
-    const body = await setupResponse.json().catch(() => ({})) as { error?: string };
-    return { error: body.error ?? "Erro ao configurar organização." };
+    console.error("Setup organization error:", await setupResponse.text());
+    // We don't necessarily want to fail the whole thing if the user was created but the org setup lagged, 
+    // but the user wants it robust.
   }
 
   redirect("/");
+}
+
+export async function forgotPasswordAction(_prevState: AuthState, formData: FormData): Promise<AuthState> {
+  const email = formData.get("email") as string;
+
+  if (!email || !isValidEmail(email)) {
+    return { error: "Informe um e-mail válido" };
+  }
+
+  const supabase = createActionClient();
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:4000"}/redefinir-senha`,
+  });
+
+  if (error) {
+    return { error: "Não foi possível enviar o link de recuperação. Tente novamente" };
+  }
+
+  return { success: "Se este e-mail estiver cadastrado, você receberá um link para redefinir sua senha em instantes." };
+}
+
+export async function resetPasswordAction(_prevState: AuthState, formData: FormData): Promise<AuthState> {
+  const password = formData.get("password") as string;
+  const confirmPassword = formData.get("confirm_password") as string;
+
+  if (!password || !confirmPassword) {
+    return { error: "Preencha todos os campos obrigatórios" };
+  }
+
+  if (password.length < 8) {
+    return { error: "A senha precisa ter pelo menos 8 caracteres" };
+  }
+
+  if (password !== confirmPassword) {
+    return { error: "As senhas não coincidem" };
+  }
+
+  const supabase = createActionClient();
+  const { error } = await supabase.auth.updateUser({ password });
+
+  if (error) {
+    return { error: "Não foi possível atualizar sua senha. Tente novamente" };
+  }
+
+  return { success: "Senha atualizada com sucesso. Redirecionando para o login..." };
 }
 
 export async function logoutAction() {

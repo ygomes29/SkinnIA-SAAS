@@ -168,3 +168,18 @@ h1, h2, h3 {
     color: var(--sk-text-muted);
   }
 }
+
+/* Premium Auth Utilities */
+@layer utilities {
+  .bg-auth-gradient {
+    background: radial-gradient(circle at 18% 18%, #3C3CFF 0%, transparent 60%),
+                radial-gradient(circle at 82% 12%, #A855F7 0%, transparent 55%),
+                radial-gradient(circle at 85% 85%, #60A5FA 0%, transparent 60%),
+                radial-gradient(circle at 10% 90%, #8B5CF6 0%, transparent 55%),
+                #f0f4ff;
+  }
+
+  .shadow-premium {
+    box-shadow: 0 30px 60px -12px rgba(50, 50, 93, 0.12), 0 18px 36px -18px rgba(0, 0, 0, 0.15);
+  }
+}
