@@ -1,0 +1,30 @@
+import { Settings2 } from "lucide-react";
+
+export default function IntegracoesPage() {
+  return (
+    <div className="space-y-6">
+      <div>
+        <p className="text-sm uppercase tracking-[0.24em] text-[--sk-text-brand]">Integrações</p>
+        <h1 className="mt-2 text-3xl font-semibold text-white">
+          Gerenciar integrações
+        </h1>
+        <p className="mt-2 text-[--sk-text-secondary]">
+          Conecte WhatsApp, n8n, Mercado Pago e outros serviços
+        </p>
+      </div>
+
+      <div className="flex min-h-[400px] items-center justify-center rounded-3xl border border-white/10 bg-white/[0.02]">
+        <div className="text-center">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-violet-500/20 bg-violet-500/10">
+            <Settings2 className="h-8 w-8 text-violet-400" />
+          </div>
+          <h3 className="mt-4 text-lg font-medium text-white">Integrações</h3>
+          <p className="mt-2 max-w-md text-sm text-[--sk-text-muted]">
+            Esta página está em desenvolvimento. Aqui você poderá visualizar o status,
+            conectar e gerenciar todas as integrações do sistema.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}

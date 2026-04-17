@@ -38,7 +38,7 @@ function TimeCell({
   return (
     <div
       className={`min-h-[120px] rounded-3xl border border-dashed p-3 text-left transition ${
-        isOver ? "border-pink-400/50 bg-pink-500/10" : "border-white/10 bg-white/[0.02]"
+        isOver ? "border-violet-400/50 bg-violet-500/10" : "border-white/10 bg-white/[0.02]"
       }`}
       onClick={onCreate}
       onKeyDown={(event) => {
@@ -202,16 +202,23 @@ export function CalendarView({
             </div>
           </div>
         </CardHeader>
-        <CardContent className="space-y-4 overflow-x-auto">
-          <DndContext onDragEnd={handleDragEnd}>
-            <div className="grid min-w-[900px] gap-4" style={{ gridTemplateColumns: `120px repeat(${days.length}, minmax(180px, 1fr))` }}>
+        <CardContent className="space-y-4">
+          <div className="relative overflow-x-auto pb-2 -mx-6 px-6 scrollbar-thin scrollbar-thumb-violet-500/30 scrollbar-track-transparent">
+            <DndContext onDragEnd={handleDragEnd}>
+              <div
+                className="grid gap-3"
+                style={{
+                  gridTemplateColumns: `90px repeat(${days.length}, minmax(140px, 1fr))`,
+                  minWidth: viewMode === "day" ? "auto" : "800px"
+                }}
+              >
               <div />
               {days.map((day) => (
-                <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-4 text-center" key={day.toISOString()}>
-                  <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
+                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3 text-center" key={day.toISOString()}>
+                  <p className="text-xs uppercase tracking-[0.15em] text-slate-500">
                     {format(day, "EEE", { locale: ptBR })}
                   </p>
-                  <p className="mt-2 text-lg font-semibold text-white">{format(day, "dd/MM")}</p>
+                  <p className="mt-1 text-base font-semibold text-white">{format(day, "dd/MM")}</p>
                 </div>
               ))}
 
@@ -244,8 +251,9 @@ export function CalendarView({
                   })}
                 </div>
               ))}
-            </div>
-          </DndContext>
+              </div>
+            </DndContext>
+          </div>
         </CardContent>
       </Card>
 

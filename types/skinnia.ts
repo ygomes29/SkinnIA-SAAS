@@ -202,3 +202,77 @@ export interface AgentConfig {
   created_at?: string;
   updated_at?: string;
 }
+
+// Onboarding types
+export type OnboardingStep =
+  | "business_data"
+  | "working_hours"
+  | "team"
+  | "services"
+  | "whatsapp"
+  | "agent"
+  | "review";
+
+export type OnboardingStatus = "pending" | "in_progress" | "completed" | "skipped";
+
+export interface OnboardingProgress {
+  id: string;
+  tenant_id: string;
+  step: OnboardingStep;
+  status: OnboardingStatus;
+  payload: Record<string, unknown>;
+  completed_at?: string | null;
+  updated_at?: string | null;
+  created_at?: string;
+}
+
+export interface OnboardingStatusSummary {
+  total_steps: number;
+  completed_steps: number;
+  current_step?: string | null;
+  is_complete: boolean;
+  progress_percent: number;
+}
+
+// Integration types
+export type IntegrationType = "whatsapp" | "n8n" | "mercadopago" | "stripe" | "email" | "sms";
+
+export type IntegrationStatus = "connected" | "pending" | "error" | "disconnected";
+
+export interface Integration {
+  id: string;
+  tenant_id: string;
+  type: IntegrationType;
+  provider: string;
+  status: IntegrationStatus;
+  config: Record<string, unknown>;
+  last_sync_at?: string | null;
+  last_error?: string | null;
+  metadata?: Record<string, unknown> | null;
+  created_at?: string;
+  updated_at?: string | null;
+}
+
+// Client import types
+export type ImportJobStatus = "pending" | "processing" | "completed" | "failed" | "cancelled";
+
+export interface ClientImportJob {
+  id: string;
+  tenant_id: string;
+  file_name: string;
+  file_size?: number | null;
+  file_hash?: string | null;
+  status: ImportJobStatus;
+  total_rows: number;
+  imported_rows: number;
+  failed_rows: number;
+  skipped_rows: number;
+  column_mapping?: Record<string, unknown>;
+  report?: Record<string, unknown>;
+  error_details?: string | null;
+  created_by?: string | null;
+  started_at?: string | null;
+  completed_at?: string | null;
+  created_at?: string;
+  updated_at?: string | null;
+}
