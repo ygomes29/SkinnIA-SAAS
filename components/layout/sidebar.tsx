@@ -64,7 +64,7 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        "hidden h-screen w-72 shrink-0 flex-col px-5 py-7 lg:flex",
+        "hidden h-screen w-72 shrink-0 flex-col px-4 py-6 lg:flex",
         "bg-[var(--sk-bg-sidebar)] border-r border-[var(--sk-border)]"
       )}
       style={{
@@ -72,19 +72,20 @@ export function Sidebar() {
       }}
     >
       {/* Logo */}
-      <div className="mb-6">
+      <div className="mb-5 px-2">
         <div className={cn(
-          "inline-flex items-center gap-3 rounded-2xl px-3.5 py-2.5",
-          "bg-[var(--sk-bg-card)] border border-[var(--sk-border)]"
+          "inline-flex items-center gap-3 rounded-2xl px-3 py-2",
+          "bg-[var(--sk-bg-card)] border border-[var(--sk-border)]",
+          "shadow-[var(--sk-shadow-sm)]"
         )}>
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-brand-violet to-brand-cyan text-base font-bold text-white shadow-brand">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-brand-violet to-brand-cyan text-sm font-bold text-white shadow-brand">
             S
           </div>
           <div>
-            <p className="text-[10px] font-medium uppercase tracking-[0.26em] text-[var(--sk-text-brand)]">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--sk-text-brand)]">
               SkinnIA
             </p>
-            <h1 className="font-display text-base font-semibold text-[var(--sk-text-primary)] leading-tight">
+            <h1 className="font-display text-sm font-semibold text-[var(--sk-text-primary)] leading-tight">
               Painel Operacional
             </h1>
           </div>
@@ -92,15 +93,15 @@ export function Sidebar() {
       </div>
 
       {/* Nav Groups */}
-      <nav className="flex-1 space-y-6 overflow-y-auto pr-1 scrollbar-thin">
+      <nav className="flex-1 space-y-5 overflow-y-auto pr-1 scrollbar-thin">
         {navGroups.map((group) => (
-          <div key={group.title} className="space-y-1">
-            {/* Group Header */}
-            <p className="px-3.5 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--sk-text-muted)]">
+          <div key={group.title} className="space-y-1.5">
+            {/* Group Header - Mais visível */}
+            <p className="px-3 pb-1 text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--sk-text-muted)]">
               {group.title}
             </p>
             {/* Group Items */}
-            <div className="space-y-0.5">
+            <div className="space-y-1">
               {group.items.map((item) => {
                 const Icon = item.icon;
                 const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
@@ -108,23 +109,23 @@ export function Sidebar() {
                 return (
                   <Link
                     className={cn(
-                      "flex items-center gap-3 rounded-xl px-3.5 py-2 text-sm font-medium transition-all duration-150",
+                      "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200",
                       active
-                        ? "bg-[var(--sk-bg-active)] text-[var(--sk-text-primary)] ring-1 ring-[var(--sk-border-strong)] shadow-[var(--sk-shadow-sm)]"
-                        : "text-[var(--sk-text-muted)] hover:bg-[var(--sk-bg-hover)] hover:text-[var(--sk-text-secondary)]"
+                        ? "bg-[var(--sk-brand-500)]/10 text-[var(--sk-text-primary)] ring-1 ring-[var(--sk-brand-500)]/25 shadow-[var(--sk-shadow-sm)]"
+                        : "text-[var(--sk-text-secondary)] hover:bg-[var(--sk-bg-hover)] hover:text-[var(--sk-text-primary)]"
                     )}
                     href={item.href}
                     key={item.href}
                   >
                     <Icon
                       className={cn(
-                        "h-[17px] w-[17px] shrink-0 transition-colors",
-                        active ? "text-brand-cyan" : "text-[var(--sk-text-muted)]"
+                        "h-[18px] w-[18px] shrink-0 transition-colors",
+                        active ? "text-[var(--sk-brand-500)]" : "text-[var(--sk-text-muted)]"
                       )}
                     />
                     <span>{item.label}</span>
                     {active && (
-                      <span className="ml-auto h-1.5 w-1.5 rounded-full bg-brand-cyan" />
+                      <span className="ml-auto h-2 w-2 rounded-full bg-[var(--sk-brand-500)]" />
                     )}
                   </Link>
                 );
@@ -134,22 +135,22 @@ export function Sidebar() {
         ))}
       </nav>
 
-      {/* Plan card */}
+      {/* Plan card - Mais refinado */}
       <div
         className={cn(
-          "mt-4 rounded-[22px] border p-4",
-          "bg-[var(--sk-bg-card)] border-[var(--sk-border)]"
+          "mt-3 rounded-[20px] border p-4",
+          "bg-gradient-to-br from-[var(--sk-brand-500)]/8 to-[var(--sk-accent-400)]/5",
+          "border-[var(--sk-brand-500)]/20"
         )}
-        style={{ background: "var(--sk-gradient-brand-soft)" }}
       >
-        <p className="text-[10px] font-medium uppercase tracking-[0.24em] text-[var(--sk-text-brand)]">
+        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--sk-brand-600)]">
           Plano atual
         </p>
-        <h2 className="font-display mt-1.5 text-lg font-semibold text-[var(--sk-text-primary)]">
+        <h2 className="font-display mt-1.5 text-base font-bold text-[var(--sk-text-primary)]">
           SkinnIA Pro
         </h2>
-        <p className="mt-1.5 text-sm text-[var(--sk-text-secondary)] leading-relaxed">
-          WhatsApp ativo, automações monitoradas e painel pronto para operação multi-unidade.
+        <p className="mt-2 text-xs text-[var(--sk-text-secondary)] leading-relaxed">
+          WhatsApp ativo, automações monitoradas e painel multi-unidade.
         </p>
       </div>
     </aside>

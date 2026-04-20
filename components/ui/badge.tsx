@@ -24,8 +24,8 @@ const variants = {
     "ring-1 ring-[var(--sk-info-border)]"
   ].join(" "),
   pink: [
-    "bg-[var(--sk-bg-soft)] text-[var(--sk-brand-400)]",
-    "ring-1 ring-[var(--sk-border)]"
+    "bg-[var(--sk-brand-500)]/10 text-[var(--sk-brand-600)]",
+    "ring-1 ring-[var(--sk-brand-500)]/20"
   ].join(" ")
 };
 
@@ -41,7 +41,7 @@ export function Badge({
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium tracking-wide transition-colors",
+        "inline-flex items-center rounded-lg px-2 py-0.5 text-[11px] font-semibold tracking-wide transition-colors",
         variants[variant],
         className
       )}

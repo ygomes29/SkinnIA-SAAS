@@ -3,32 +3,32 @@ import * as React from "react";
 import { cn } from "@/lib/utils/cn";
 
 const variants = {
-  // Primary: gradiente brand com sombra premium
+  // Primary: gradiente brand mais vivo
   default:
-    "bg-gradient-to-r from-brand-violet via-purple-600 to-brand-cyan text-white shadow-brand hover:opacity-90 active:scale-[0.98]",
+    "bg-gradient-to-r from-[var(--sk-brand-600)] via-[var(--sk-brand-500)] to-[var(--sk-accent-500)] text-white shadow-[var(--sk-shadow-brand)] hover:shadow-[var(--sk-shadow-md)] hover:brightness-105 active:scale-[0.98]",
 
-  // Secondary: fundo suave com borda sutil
+  // Secondary: mais definido
   secondary:
-    "border border-[var(--sk-border)] bg-[var(--sk-bg-soft)] text-[var(--sk-text-secondary)] hover:bg-[var(--sk-bg-hover)] hover:border-[var(--sk-border-strong)] hover:text-[var(--sk-text-primary)] transition-all",
+    "border border-[var(--sk-border)] bg-[var(--sk-bg-card)] text-[var(--sk-text-secondary)] hover:bg-[var(--sk-bg-hover)] hover:border-[var(--sk-border-strong)] hover:text-[var(--sk-text-primary)] shadow-[var(--sk-shadow-sm)]",
 
-  // Ghost: apenas hover
+  // Ghost: hover mais claro
   ghost:
-    "text-[var(--sk-text-muted)] hover:bg-[var(--sk-bg-hover)] hover:text-[var(--sk-text-primary)] transition-colors",
+    "text-[var(--sk-text-muted)] hover:bg-[var(--sk-bg-hover)] hover:text-[var(--sk-text-primary)]",
 
-  // Outline: transparente com borda
+  // Outline: mais estruturado
   outline:
-    "border border-[var(--sk-border)] bg-transparent text-[var(--sk-text-secondary)] hover:bg-[var(--sk-bg-hover)] hover:border-[var(--sk-border-strong)] hover:text-[var(--sk-text-primary)] transition-all",
+    "border border-[var(--sk-border)] bg-transparent text-[var(--sk-text-secondary)] hover:bg-[var(--sk-bg-hover)] hover:border-[var(--sk-border-strong)] hover:text-[var(--sk-text-primary)]",
 
-  // Destructive: erro/perigo
+  // Destructive: mais vibrante
   destructive:
-    "bg-[var(--sk-danger)] text-white hover:opacity-90 active:scale-[0.98] transition-all"
+    "bg-[var(--sk-danger)] text-white shadow-sm hover:bg-[var(--sk-danger)]/90 active:scale-[0.98]"
 };
 
 const sizes = {
-  default: "h-11 px-5 py-2",
-  sm: "h-9 rounded-xl px-3 text-sm",
-  lg: "h-12 rounded-2xl px-6 text-base",
-  icon: "h-10 w-10 rounded-2xl"
+  default: "h-10 px-4 py-2 rounded-xl text-sm",
+  sm: "h-8 rounded-lg px-3 text-xs",
+  lg: "h-11 rounded-xl px-5 text-sm",
+  icon: "h-9 w-9 rounded-xl"
 };
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -40,7 +40,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = "default", size = "default", ...props }, ref) => (
     <button
       className={cn(
-        "inline-flex items-center justify-center rounded-2xl font-medium transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-40",
+        "inline-flex items-center justify-center font-semibold transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-40",
         variants[variant],
         sizes[size],
         className

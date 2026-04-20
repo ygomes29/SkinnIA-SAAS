@@ -16,7 +16,7 @@ import { ptBR } from "date-fns/locale";
 
 import { AppointmentCard } from "@/components/agenda/appointment-card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Modal } from "@/components/ui/modal";
 import { Select } from "@/components/ui/select";
 import { useAppointments } from "@/lib/hooks/use-appointments";
@@ -28,21 +28,26 @@ import type { Appointment, Client, Professional, Service } from "@/types/skinnia
 function TimeCell({
   id,
   children,
-  onCreate
+  onCreate,
+  hasContent
 }: {
   id: string;
   children?: ReactNode;
   onCreate: () => void;
+  hasContent?: boolean;
 }) {
   const { isOver, setNodeRef } = useDroppable({ id });
 
   return (
     <div
       className={cn(
-        "min-h-[120px] rounded-3xl border border-dashed p-3 text-left transition-all duration-200",
+        "min-h-[100px] rounded-xl p-2.5 text-left transition-all duration-200",
+        "border",
         isOver
-          ? "border-[var(--sk-brand-400)]/50 bg-[var(--sk-brand-500)]/10"
-          : "border-[var(--sk-border)] bg-[var(--sk-bg-panel)]"
+          ? "border-[var(--sk-brand-500)]/60 bg-[var(--sk-brand-500)]/8 shadow-inner"
+          : hasContent
+            ? "border-[var(--sk-border)] bg-[var(--sk-bg-card)]"
+            : "border-[var(--sk-border)]/60 border-dashed bg-[var(--sk-bg-panel)]/60 hover:border-[var(--sk-border)] hover:bg-[var(--sk-bg-panel)]"
       )}
       onClick={onCreate}
       onKeyDown={(event) => {
@@ -55,7 +60,11 @@ function TimeCell({
       role="button"
       tabIndex={0}
     >
-      {children ?? <span className="text-xs text-[var(--sk-text-muted)]">Clique para novo agendamento</span>}
+      {children ?? (
+        <div className="h-full flex items-center justify-center">
+          <span className="text-[10px] text-[var(--sk-text-muted)]">+</span>
+        </div>
+      )}
     </div>
   );
 }
@@ -169,16 +178,18 @@ export function CalendarView({
 
   return (
     <>
-      <Card>
-        <CardHeader>
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+      <Card className="overflow-hidden">
+        <CardHeader className="pb-4">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <CardTitle>Agenda</CardTitle>
-              <CardDescription>
-                Visualização semanal e diária com drag-and-drop para remarcar.
-              </CardDescription>
+              <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-[var(--sk-brand-600)]">
+                Agenda
+              </p>
+              <h3 className="font-display text-lg font-bold text-[var(--sk-text-primary)]">
+                {viewMode === "week" ? "Visualização semanal" : "Visualização diária"}
+              </h3>
             </div>
-            <div className="flex flex-col gap-3 sm:flex-row">
+            <div className="flex flex-col gap-2 sm:flex-row">
               <Select value={professionalFilter} onChange={(event) => setProfessionalFilter(event.target.value)}>
                 <option value="all">Todos os profissionais</option>
                 {professionals.map((professional) => (
@@ -187,18 +198,23 @@ export function CalendarView({
                   </option>
                 ))}
               </Select>
-              <div className="flex gap-2">
+              <div className={cn(
+                "flex gap-1 rounded-xl p-1",
+                "bg-[var(--sk-bg-soft)] border border-[var(--sk-border)]"
+              )}>
                 <Button
                   onClick={() => setViewMode("week")}
                   size="sm"
-                  variant={viewMode === "week" ? "default" : "secondary"}
+                  variant={viewMode === "week" ? "default" : "ghost"}
+                  className="text-xs px-3 h-8"
                 >
                   Semana
                 </Button>
                 <Button
                   onClick={() => setViewMode("day")}
                   size="sm"
-                  variant={viewMode === "day" ? "default" : "secondary"}
+                  variant={viewMode === "day" ? "default" : "ghost"}
+                  className="text-xs px-3 h-8"
                 >
                   Dia
                 </Button>
@@ -206,35 +222,40 @@ export function CalendarView({
             </div>
           </div>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="relative overflow-x-auto pb-2 -mx-6 px-6 scrollbar-thin">
+        <CardContent className="pt-0">
+          <div className="relative overflow-x-auto pb-4 scrollbar-thin">
             <DndContext onDragEnd={handleDragEnd}>
               <div
-                className="grid gap-3"
+                className="grid gap-2"
                 style={{
-                  gridTemplateColumns: `90px repeat(${days.length}, minmax(140px, 1fr))`,
+                  gridTemplateColumns: `70px repeat(${days.length}, minmax(140px, 1fr))`,
                   minWidth: viewMode === "day" ? "auto" : "800px"
                 }}
               >
-              <div />
+              {/* Header row */}
+              <div className="sticky left-0 z-10" />
               {days.map((day) => (
                 <div
                   className={cn(
-                    "rounded-2xl border p-3 text-center",
-                    "border-[var(--sk-border)] bg-[var(--sk-bg-panel)]"
+                    "rounded-xl border p-2 text-center sticky top-0",
+                    "border-[var(--sk-border)] bg-[var(--sk-bg-card)]",
+                    "shadow-[var(--sk-shadow-sm)]"
                   )}
                   key={day.toISOString()}
                 >
-                  <p className="text-xs uppercase tracking-[0.15em] text-[var(--sk-text-muted)]">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--sk-text-muted)]">
                     {format(day, "EEE", { locale: ptBR })}
                   </p>
-                  <p className="mt-1 text-base font-semibold text-[var(--sk-text-primary)]">{format(day, "dd/MM")}</p>
+                  <p className="mt-0.5 text-sm font-bold text-[var(--sk-text-primary)]">{format(day, "dd/MM")}</p>
                 </div>
               ))}
 
+              {/* Time slots */}
               {timeSlots.map((time) => (
                 <div className="contents" key={time}>
-                  <div className="flex items-start pt-4 text-sm text-[var(--sk-text-muted)]">{time}</div>
+                  <div className="sticky left-0 z-10 flex items-start justify-end pr-3 pt-3">
+                    <span className="text-xs font-medium text-[var(--sk-text-muted)]">{time}</span>
+                  </div>
                   {days.map((day) => {
                     const [hour] = time.split(":").map(Number);
                     const slotDate = setMinutes(setHours(day, hour), 0);
@@ -246,8 +267,9 @@ export function CalendarView({
                         id={slotKey}
                         key={slotKey}
                         onCreate={() => setSelectedSlot(slotDate.toISOString())}
+                        hasContent={slotAppointments.length > 0}
                       >
-                        <div className="space-y-2">
+                        <div className="space-y-1.5">
                           {slotAppointments.map((appointment) => (
                             <AppointmentCard
                               appointment={appointment}
@@ -267,6 +289,7 @@ export function CalendarView({
         </CardContent>
       </Card>
 
+      {/* Modals permanecem os mesmos - simplificados para foco */}
       <Modal
         description="Selecione cliente, serviço, profissional e revise o resumo antes de confirmar."
         onClose={() => setSelectedSlot(null)}
@@ -274,18 +297,18 @@ export function CalendarView({
         title="Novo agendamento"
       >
         <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <label className="text-sm text-[var(--sk-text-secondary)]">Cliente</label>
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-[var(--sk-text-secondary)]">Cliente</label>
             <Select value={clientId} onChange={(event) => setClientId(event.target.value)}>
               {clients.map((client) => (
                 <option key={client.id} value={client.id}>
-                  {client.name} • {client.phone}
+                  {client.name}
                 </option>
               ))}
             </Select>
           </div>
-          <div className="space-y-2">
-            <label className="text-sm text-[var(--sk-text-secondary)]">Serviço</label>
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-[var(--sk-text-secondary)]">Serviço</label>
             <Select value={serviceId} onChange={(event) => setServiceId(event.target.value)}>
               {services.map((service) => (
                 <option key={service.id} value={service.id}>
@@ -294,8 +317,8 @@ export function CalendarView({
               ))}
             </Select>
           </div>
-          <div className="space-y-2">
-            <label className="text-sm text-[var(--sk-text-secondary)]">Profissional</label>
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-[var(--sk-text-secondary)]">Profissional</label>
             <Select value={professionalId} onChange={(event) => setProfessionalId(event.target.value)}>
               {professionals.map((professional) => (
                 <option key={professional.id} value={professional.id}>
@@ -304,11 +327,11 @@ export function CalendarView({
               ))}
             </Select>
           </div>
-          <div className="space-y-2">
-            <label className="text-sm text-[var(--sk-text-secondary)]">Data e hora</label>
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-[var(--sk-text-secondary)]">Data e hora</label>
             <input
               className={cn(
-                "flex h-11 w-full rounded-2xl border px-4 py-2 text-sm",
+                "flex h-10 w-full rounded-xl border px-3 py-2 text-sm",
                 "border-[var(--sk-border)] bg-[var(--sk-bg-input)] text-[var(--sk-text-primary)]"
               )}
               onChange={(event) => setSelectedSlot(new Date(event.target.value).toISOString())}
@@ -319,43 +342,40 @@ export function CalendarView({
         </div>
 
         <div className={cn(
-          "mt-4 rounded-3xl border p-4",
+          "mt-4 rounded-2xl border p-3",
           "border-[var(--sk-border)] bg-[var(--sk-bg-panel)]"
         )}>
-          <p className="text-sm text-[var(--sk-text-muted)]">Prévia do resumo</p>
-          <p className="mt-2 font-semibold text-[var(--sk-text-primary)]">
+          <p className="text-xs font-medium text-[var(--sk-text-muted)]">Prévia do resumo</p>
+          <p className="mt-1.5 text-sm font-semibold text-[var(--sk-text-primary)]">
             {clients.find((client) => client.id === clientId)?.name} •{" "}
             {services.find((service) => service.id === serviceId)?.name}
           </p>
-          <p className="mt-1 text-sm text-[var(--sk-text-secondary)]">
-            {selectedSlot ? formatDateTime(new Date(selectedSlot).toISOString()) : "Sem horário selecionado"}
+          <p className="mt-1 text-xs text-[var(--sk-text-secondary)]">
+            {selectedSlot ? formatDateTime(new Date(selectedSlot).toISOString()) : "Sem horário"}
           </p>
-          <p className="mt-1 text-sm text-[var(--sk-text-secondary)]">
-            Valor {formatCurrency(services.find((service) => service.id === serviceId)?.price ?? 0)}
+          <p className="text-xs text-[var(--sk-text-secondary)]">
+            {formatCurrency(services.find((service) => service.id === serviceId)?.price ?? 0)}
           </p>
         </div>
 
         <label className={cn(
-          "mt-4 flex items-center gap-3 rounded-2xl border px-4 py-3 text-sm",
+          "mt-3 flex items-center gap-2 rounded-xl border px-3 py-2.5 text-xs",
           "border-[var(--sk-border)] bg-[var(--sk-bg-panel)] text-[var(--sk-text-secondary)]"
         )}>
           <input
             checked={chargeDeposit}
-            className={cn(
-              "h-4 w-4 rounded",
-              "border-[var(--sk-border)] bg-[var(--sk-bg-input)]"
-            )}
+            className="h-4 w-4 rounded border-[var(--sk-border)]"
             onChange={(event) => setChargeDeposit(event.target.checked)}
             type="checkbox"
           />
           Cobrar sinal se o serviço exigir depósito
         </label>
 
-        <div className="mt-6 flex justify-end gap-3">
-          <Button onClick={() => setSelectedSlot(null)} variant="ghost">
+        <div className="mt-5 flex justify-end gap-2">
+          <Button onClick={() => setSelectedSlot(null)} variant="ghost" size="sm">
             Cancelar
           </Button>
-          <Button onClick={createAppointment}>Confirmar agendamento</Button>
+          <Button onClick={createAppointment} size="sm">Confirmar</Button>
         </div>
       </Modal>
 
@@ -368,32 +388,30 @@ export function CalendarView({
         title={selectedAppointment?.client_name ?? "Detalhes do agendamento"}
       >
         {selectedAppointment ? (
-          <div className="space-y-4">
+          <div className="space-y-3">
             <div className={cn(
-              "rounded-3xl border p-4",
+              "rounded-2xl border p-3",
               "border-[var(--sk-border)] bg-[var(--sk-bg-panel)]"
             )}>
-              <p className="text-sm text-[var(--sk-text-muted)]">{selectedAppointment.service_name}</p>
-              <p className="mt-2 text-xl font-semibold text-[var(--sk-text-primary)]">
+              <p className="text-xs font-medium text-[var(--sk-text-muted)]">{selectedAppointment.service_name}</p>
+              <p className="mt-1 text-lg font-bold text-[var(--sk-text-primary)]">
                 {formatDateTime(selectedAppointment.start_at)}
               </p>
-              <p className="mt-2 text-sm text-[var(--sk-text-secondary)]">
-                Profissional: {selectedAppointment.professional_name}
-              </p>
-              <p className="text-sm text-[var(--sk-text-secondary)]">
-                Valor: {formatCurrency(selectedAppointment.price)}
+              <p className="mt-1 text-xs text-[var(--sk-text-secondary)]">
+                {selectedAppointment.professional_name} • {formatCurrency(selectedAppointment.price)}
               </p>
             </div>
 
-            <div className="grid gap-3">
+            <div className="grid gap-2">
               <Button
                 onClick={() => {
                   updateStatus(selectedAppointment.id, "confirmed");
                   setSelectedAppointment(null);
                 }}
                 variant="secondary"
+                size="sm"
               >
-                Confirmar manualmente
+                Confirmar
               </Button>
               <Button
                 onClick={() => {
@@ -401,8 +419,9 @@ export function CalendarView({
                   setSelectedAppointment(null);
                 }}
                 variant="secondary"
+                size="sm"
               >
-                Marcar como concluído
+                Concluir
               </Button>
               <Button
                 onClick={() => {
@@ -410,8 +429,9 @@ export function CalendarView({
                   setSelectedAppointment(null);
                 }}
                 variant="outline"
+                size="sm"
               >
-                Marcar como no-show
+                No-show
               </Button>
               <Button
                 onClick={() => {
@@ -419,11 +439,10 @@ export function CalendarView({
                   setSelectedAppointment(null);
                 }}
                 variant="destructive"
+                size="sm"
               >
                 Cancelar
               </Button>
-              <Button variant="ghost">Enviar lembrete agora</Button>
-              <Button variant="ghost">Ver conversa do WhatsApp</Button>
             </div>
           </div>
         ) : null}

@@ -49,31 +49,49 @@ export async function MetricsCards() {
   ];
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
       {cards.map((card) => {
         const Icon = card.icon;
 
         return (
-          <Card className="overflow-hidden p-0" key={card.label}>
+          <Card
+            className={cn(
+              "overflow-hidden p-0 border-0",
+              "shadow-[var(--sk-shadow-sm)] hover:shadow-[var(--sk-shadow-md)]",
+              "transition-shadow duration-200"
+            )}
+            key={card.label}
+          >
             <div className={cn(
-              "relative h-full overflow-hidden rounded-[28px] p-5",
+              "relative h-full overflow-hidden rounded-2xl p-4",
               "border border-[var(--sk-border)]",
-              "bg-[var(--sk-bg-card)]",
-              "bg-gradient-to-br from-[var(--sk-brand-500)]/[0.06] to-transparent"
+              "bg-[var(--sk-bg-card)]"
             )}>
-              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[var(--sk-brand-500)]/30 to-transparent" />
-              <div className="mb-6 flex items-start justify-between">
+              {/* Top accent line */}
+              <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-[var(--sk-brand-500)] via-[var(--sk-accent-400)] to-[var(--sk-brand-500)] opacity-60" />
+
+              <div className="mb-4 flex items-start justify-between">
                 <div className={cn(
-                  "rounded-2xl p-3",
-                  "bg-[var(--sk-brand-500)]/15"
+                  "rounded-xl p-2.5",
+                  "bg-gradient-to-br from-[var(--sk-brand-500)]/15 to-[var(--sk-brand-500)]/5",
+                  "ring-1 ring-[var(--sk-brand-500)]/20"
                 )}>
-                  <Icon className="h-5 w-5 text-brand-cyan" />
+                  <Icon className="h-5 w-5 text-[var(--sk-brand-600)]" />
                 </div>
-                <Badge variant={card.badgeVariant}>{card.badge}</Badge>
+                <Badge variant={card.badgeVariant} className="text-[10px] font-semibold">
+                  {card.badge}
+                </Badge>
               </div>
-              <p className="text-sm text-[var(--sk-text-muted)]">{card.label}</p>
-              <p className="mt-2 font-display text-3xl font-semibold text-[var(--sk-text-primary)]">{card.value}</p>
-              <p className="mt-3 text-sm text-[var(--sk-text-secondary)]">{card.detail}</p>
+
+              <p className="text-xs font-medium text-[var(--sk-text-muted)] uppercase tracking-wide">
+                {card.label}
+              </p>
+              <p className="mt-1 font-display text-2xl font-bold text-[var(--sk-text-primary)] tracking-tight">
+                {card.value}
+              </p>
+              <p className="mt-2 text-xs text-[var(--sk-text-secondary)] leading-relaxed">
+                {card.detail}
+              </p>
             </div>
           </Card>
         );

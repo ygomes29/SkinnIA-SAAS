@@ -121,101 +121,102 @@
 }
 
 /* ─────────────────────────────────────────────────────────
-   LIGHT MODE — Elegante, Sofisticado, Premium
+   LIGHT MODE — Refinado, Premium, Estruturado
    Baseado no conceito visual da tela de login/cadastro
+   Mais contraste, mais hierarquia, mais presença visual
 ───────────────────────────────────────────────────────── */
 .light {
   color-scheme: light;
 
-  /* ── HSL Tokens (Light) ── */
-  --background: 240 20% 98%;
-  --foreground: 222 47% 11%;
+  /* ── HSL Tokens (Light) — Mais estrutura e contraste ── */
+  --background: 240 20% 96%;
+  --foreground: 222 47% 8%;
   --card: 0 0% 100%;
-  --card-foreground: 222 47% 11%;
+  --card-foreground: 222 47% 8%;
   --popover: 0 0% 100%;
-  --popover-foreground: 222 47% 11%;
-  --primary: 263 72% 52%;
+  --popover-foreground: 222 47% 8%;
+  --primary: 263 72% 50%;
   --primary-foreground: 0 0% 100%;
-  --secondary: 240 20% 96%;
+  --secondary: 240 20% 94%;
   --secondary-foreground: 222 47% 11%;
-  --muted: 240 20% 96%;
-  --muted-foreground: 222 20% 45%;
-  --accent: 262 70% 55%;
+  --muted: 240 18% 92%;
+  --muted-foreground: 222 20% 38%;
+  --accent: 262 70% 52%;
   --accent-foreground: 0 0% 100%;
-  --destructive: 0 84% 60%;
+  --destructive: 0 72% 51%;
   --destructive-foreground: 0 0% 100%;
-  --border: 240 20% 90%;
-  --input: 240 20% 90%;
+  --border: 240 18% 88%;
+  --input: 240 18% 88%;
   --ring: 263 72% 52%;
 
-  /* ── SkinnIA Design Tokens — Light Mode ── */
-  /* Backgrounds - Off-white sofisticado com nuance lilás */
-  --sk-bg-app: #F8F7FB;
-  --sk-bg-sidebar: #FFFFFF;
-  --sk-bg-topbar: rgba(255, 255, 255, 0.85);
+  /* ── SkinnIA Design Tokens — Light Mode Refinado ── */
+  /* Backgrounds - Com mais profundidade e estrutura */
+  --sk-bg-app: #F5F3F9;
+  --sk-bg-sidebar: #FDFCFF;
+  --sk-bg-topbar: rgba(253, 252, 255, 0.95);
   --sk-bg-panel: #FFFFFF;
   --sk-bg-card: #FFFFFF;
-  --sk-bg-card-hover: #FAFAFC;
-  --sk-bg-soft: #F0EFF4;
+  --sk-bg-card-hover: #FAF9FD;
+  --sk-bg-soft: #EDEAF2;
   --sk-bg-input: #FFFFFF;
-  --sk-bg-hover: rgba(124, 58, 237, 0.04);
-  --sk-bg-active: rgba(124, 58, 237, 0.08);
+  --sk-bg-hover: rgba(124, 58, 237, 0.06);
+  --sk-bg-active: rgba(124, 58, 237, 0.12);
   --sk-bg-elevated: #FFFFFF;
 
-  /* Brand Scale - Mantendo a identidade */
-  --sk-brand-300: #8B5CF6;
-  --sk-brand-400: #7C3AED;
-  --sk-brand-500: #6D28D9;
-  --sk-brand-600: #5B21B6;
-  --sk-brand-700: #4C1D95;
+  /* Brand Scale - Violeta mais vivo para mais presença */
+  --sk-brand-300: #A78BFA;
+  --sk-brand-400: #8B5CF6;
+  --sk-brand-500: #7C3AED;
+  --sk-brand-600: #6D28D9;
+  --sk-brand-700: #5B21B6;
 
-  /* Accent Scale */
-  --sk-accent-300: #0EA5E9;
-  --sk-accent-400: #0284C7;
-  --sk-accent-500: #0369A1;
-  --sk-accent-600: #075985;
+  /* Accent Scale - Ciano mais perceptível */
+  --sk-accent-300: #38BDF8;
+  --sk-accent-400: #0EA5E9;
+  --sk-accent-500: #0284C7;
+  --sk-accent-600: #0369A1;
   --sk-accent-teal: #14B8A6;
 
-  /* Text Colors - Tom escuro elegante, não preto absoluto */
-  --sk-text-primary: #1E1B2E;
-  --sk-text-secondary: #4A4760;
-  --sk-text-muted: #7C7999;
+  /* Text Colors - Mais escuros para melhor legibilidade */
+  --sk-text-primary: #1A1625;
+  --sk-text-secondary: #4A4860;
+  --sk-text-muted: #6B6880;
   --sk-text-brand: #6D28D9;
   --sk-text-on-primary: #FFFFFF;
 
-  /* Border Colors - Suaves e elegantes */
-  --sk-border-subtle: rgba(124, 58, 237, 0.08);
-  --sk-border: rgba(124, 58, 237, 0.12);
-  --sk-border-strong: rgba(124, 58, 237, 0.20);
-  --sk-border-focus: rgba(124, 58, 237, 0.35);
+  /* Border Colors - Mais visíveis mas elegantes */
+  --sk-border-subtle: rgba(124, 58, 237, 0.10);
+  --sk-border: rgba(124, 58, 237, 0.18);
+  --sk-border-strong: rgba(124, 58, 237, 0.28);
+  --sk-border-focus: rgba(124, 58, 237, 0.45);
 
-  /* Shadows - Delicadas e sofisticadas */
-  --sk-shadow-sm: 0 1px 2px rgba(14, 12, 32, 0.05), 0 1px 3px rgba(14, 12, 32, 0.03);
-  --sk-shadow-md: 0 4px 12px rgba(14, 12, 32, 0.08), 0 2px 6px rgba(14, 12, 32, 0.04);
-  --sk-shadow-lg: 0 8px 24px rgba(14, 12, 32, 0.10), 0 4px 12px rgba(14, 12, 32, 0.06);
-  --sk-shadow-brand: 0 8px 24px rgba(124, 58, 237, 0.18);
-  --sk-shadow-card: 0 2px 12px rgba(14, 12, 32, 0.08);
+  /* Shadows - Mais presença e profundidade */
+  --sk-shadow-sm: 0 1px 3px rgba(14, 12, 32, 0.06), 0 1px 2px rgba(14, 12, 32, 0.04);
+  --sk-shadow-md: 0 4px 14px rgba(14, 12, 32, 0.10), 0 2px 8px rgba(14, 12, 32, 0.06);
+  --sk-shadow-lg: 0 10px 32px rgba(14, 12, 32, 0.12), 0 6px 16px rgba(14, 12, 32, 0.08);
+  --sk-shadow-brand: 0 8px 28px rgba(124, 58, 237, 0.22);
+  --sk-shadow-card: 0 3px 16px rgba(14, 12, 32, 0.10);
 
-  /* Gradients */
-  --sk-gradient-brand: linear-gradient(135deg, #6D28D9 0%, #0EA5E9 100%);
-  --sk-gradient-brand-soft: linear-gradient(135deg, rgba(124, 58, 237, 0.08) 0%, rgba(14, 165, 233, 0.06) 100%);
-  --sk-gradient-brand-subtle: linear-gradient(135deg, rgba(124, 58, 237, 0.04) 0%, rgba(14, 165, 233, 0.03) 100%);
-  --sk-gradient-panel: linear-gradient(180deg, rgba(255, 255, 255, 0.80) 0%, rgba(255, 255, 255, 0.40) 100%);
-  --sk-gradient-sidebar: linear-gradient(180deg, rgba(124, 58, 237, 0.03) 0%, transparent 60%);
+  /* Gradients - Mais perceptíveis */
+  --sk-gradient-brand: linear-gradient(135deg, #7C3AED 0%, #0EA5E9 100%);
+  --sk-gradient-brand-soft: linear-gradient(135deg, rgba(124, 58, 237, 0.12) 0%, rgba(14, 165, 233, 0.08) 100%);
+  --sk-gradient-brand-subtle: linear-gradient(135deg, rgba(124, 58, 237, 0.06) 0%, rgba(14, 165, 233, 0.04) 100%);
+  --sk-gradient-panel: linear-gradient(180deg, rgba(255, 255, 255, 0.90) 0%, rgba(255, 255, 255, 0.60) 100%);
+  --sk-gradient-sidebar: linear-gradient(180deg, rgba(124, 58, 237, 0.04) 0%, transparent 60%);
 
-  /* Semantic Colors */
-  --sk-success: #10B981;
-  --sk-success-bg: rgba(16, 185, 129, 0.10);
-  --sk-success-border: rgba(16, 185, 129, 0.20);
-  --sk-warning: #F59E0B;
-  --sk-warning-bg: rgba(245, 158, 11, 0.10);
-  --sk-warning-border: rgba(245, 158, 11, 0.20);
-  --sk-danger: #EF4444;
-  --sk-danger-bg: rgba(239, 68, 68, 0.10);
-  --sk-danger-border: rgba(239, 68, 68, 0.20);
-  --sk-info: #0EA5E9;
-  --sk-info-bg: rgba(14, 165, 233, 0.10);
-  --sk-info-border: rgba(14, 165, 233, 0.20);
+  /* Semantic Colors - Mais perceptíveis */
+  --sk-success: #059669;
+  --sk-success-bg: rgba(5, 150, 105, 0.12);
+  --sk-success-border: rgba(5, 150, 105, 0.28);
+  --sk-warning: #D97706;
+  --sk-warning-bg: rgba(217, 119, 6, 0.12);
+  --sk-warning-border: rgba(217, 119, 6, 0.28);
+  --sk-danger: #DC2626;
+  --sk-danger-bg: rgba(220, 38, 38, 0.12);
+  --sk-danger-border: rgba(220, 38, 38, 0.28);
+  --sk-info: #0284C7;
+  --sk-info-bg: rgba(2, 132, 199, 0.12);
+  --sk-info-border: rgba(2, 132, 199, 0.28);
 }
 
 /* ── Base ── */
@@ -242,13 +243,13 @@ body {
     linear-gradient(180deg, var(--sk-bg-sidebar) 0%, var(--sk-bg-app) 100%);
 }
 
-/* Light mode backgrounds - suave e sofisticado */
+/* Light mode backgrounds - mais estrutura e profundidade */
 .light body {
   background:
-    radial-gradient(circle at 10% 0%, rgba(124, 58, 237, 0.06), transparent 30%),
-    radial-gradient(circle at 92% 0%, rgba(14, 165, 233, 0.04), transparent 28%),
-    radial-gradient(circle at 50% 80%, rgba(124, 58, 237, 0.02), transparent 45%),
-    linear-gradient(180deg, var(--sk-bg-app) 0%, #F0EFF4 100%);
+    radial-gradient(circle at 10% 0%, rgba(124, 58, 237, 0.10), transparent 32%),
+    radial-gradient(circle at 92% 0%, rgba(14, 165, 233, 0.06), transparent 30%),
+    radial-gradient(circle at 50% 80%, rgba(124, 58, 237, 0.04), transparent 48%),
+    linear-gradient(180deg, var(--sk-bg-app) 0%, #EDEAF2 100%);
 }
 
 a {
