@@ -9,10 +9,8 @@ export function Card({
   return (
     <div
       className={cn(
-        // Border: matiz violet sutil em vez de white/10 puro
-        // Shadow: purple-tinted em vez de navy puro
-        // Backdrop: mantido — ajuda na profundidade
-        "rounded-[28px] border border-violet-500/15 bg-white/[0.035] p-6 shadow-card backdrop-blur-sm",
+        "rounded-[28px] border p-6 backdrop-blur-sm transition-colors duration-200",
+        "bg-[var(--sk-bg-card)] border-[var(--sk-border)] shadow-[var(--sk-shadow-card)]",
         className
       )}
       {...props}
@@ -33,7 +31,7 @@ export function CardTitle({
 }: React.HTMLAttributes<HTMLHeadingElement>) {
   return (
     <h3
-      className={cn("font-display text-lg font-semibold text-white", className)}
+      className={cn("font-display text-lg font-semibold text-[var(--sk-text-primary)]", className)}
       {...props}
     />
   );
@@ -43,7 +41,7 @@ export function CardDescription({
   className,
   ...props
 }: React.HTMLAttributes<HTMLParagraphElement>) {
-  return <p className={cn("text-sm text-[--sk-text-muted]", className)} {...props} />;
+  return <p className={cn("text-sm text-[var(--sk-text-muted)]", className)} {...props} />;
 }
 
 export function CardContent({

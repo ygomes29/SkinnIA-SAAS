@@ -15,7 +15,9 @@ function SubmitButton() {
   return (
     <button
       className={cn(
-        "group relative flex w-full items-center justify-center rounded-xl bg-[#5C5CFF] py-3.5 text-sm font-semibold text-white transition-all duration-200 hover:bg-[#4B4BFF] hover:shadow-[0_0_20px_rgba(92,92,255,0.3)] disabled:opacity-70",
+        "group relative flex w-full items-center justify-center rounded-xl py-3.5 text-sm font-semibold text-white transition-all duration-200",
+        "bg-gradient-to-r from-[#5C5CFF] to-[#7C3AED] hover:shadow-[0_0_20px_rgba(92,92,255,0.3)]",
+        "disabled:opacity-70",
         pending && "cursor-not-allowed"
       )}
       disabled={pending}
@@ -38,7 +40,10 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
 
   return (
-    <div className="flex w-full max-w-[1200px] flex-col overflow-hidden rounded-[32px] bg-white shadow-premium lg:h-[760px] lg:flex-row">
+    <div className={cn(
+      "flex w-full max-w-[1200px] flex-col overflow-hidden rounded-[32px] lg:h-[760px] lg:flex-row",
+      "bg-[var(--sk-bg-card)] shadow-premium"
+    )}>
       {/* Left Column: Visual Panel */}
       <div className="relative flex min-h-[300px] flex-col justify-between p-10 lg:w-[42%] lg:p-12">
         {/* Background Gradient */}
@@ -62,7 +67,7 @@ export default function LoginPage() {
       </div>
 
       {/* Right Column: Form Panel */}
-      <div className="flex flex-col items-center justify-center bg-white p-8 lg:w-[58%] lg:p-12">
+      <div className="flex flex-col items-center justify-center p-8 lg:w-[58%] lg:p-12 bg-white">
         <div className="w-full max-w-[420px] space-y-8">
           {/* Header */}
           <div className="space-y-3">
@@ -85,7 +90,12 @@ export default function LoginPage() {
                 type="email"
                 placeholder="exemplo@email.com"
                 required
-                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-[15px] text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-[#5C5CFF] focus:ring-4 focus:ring-[#5C5CFF]/5"
+                className={cn(
+                  "w-full rounded-xl border px-4 py-2.5 text-[15px] outline-none transition-all",
+                  "border-slate-200 bg-white text-slate-900",
+                  "placeholder:text-slate-400",
+                  "focus:border-[#5C5CFF] focus:ring-4 focus:ring-[#5C5CFF]/5"
+                )}
               />
             </div>
 
@@ -105,7 +115,12 @@ export default function LoginPage() {
                   type={showPassword ? "text" : "password"}
                   placeholder="Digite sua senha"
                   required
-                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-[15px] text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-[#5C5CFF] focus:ring-4 focus:ring-[#5C5CFF]/5"
+                  className={cn(
+                    "w-full rounded-xl border px-4 py-2.5 text-[15px] outline-none transition-all",
+                    "border-slate-200 bg-white text-slate-900",
+                    "placeholder:text-slate-400",
+                    "focus:border-[#5C5CFF] focus:ring-4 focus:ring-[#5C5CFF]/5"
+                  )}
                 />
                 <button
                   type="button"

@@ -63,23 +63,28 @@ export function Sidebar() {
 
   return (
     <aside
-      className="hidden h-screen w-72 shrink-0 flex-col border-r border-violet-500/15 bg-[#0D1226] px-5 py-7 lg:flex"
+      className={cn(
+        "hidden h-screen w-72 shrink-0 flex-col px-5 py-7 lg:flex",
+        "bg-[var(--sk-bg-sidebar)] border-r border-[var(--sk-border)]"
+      )}
       style={{
-        backgroundImage:
-          "linear-gradient(180deg, rgba(124,58,237,0.05) 0%, transparent 60%)"
+        backgroundImage: "var(--sk-gradient-sidebar)"
       }}
     >
       {/* Logo */}
       <div className="mb-6">
-        <div className="inline-flex items-center gap-3 rounded-2xl border border-violet-500/15 bg-white/[0.04] px-3.5 py-2.5">
+        <div className={cn(
+          "inline-flex items-center gap-3 rounded-2xl px-3.5 py-2.5",
+          "bg-[var(--sk-bg-card)] border border-[var(--sk-border)]"
+        )}>
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-brand-violet to-brand-cyan text-base font-bold text-white shadow-brand">
             S
           </div>
           <div>
-            <p className="text-[10px] font-medium uppercase tracking-[0.26em] text-[--sk-text-brand]">
+            <p className="text-[10px] font-medium uppercase tracking-[0.26em] text-[var(--sk-text-brand)]">
               SkinnIA
             </p>
-            <h1 className="font-display text-base font-semibold text-white leading-tight">
+            <h1 className="font-display text-base font-semibold text-[var(--sk-text-primary)] leading-tight">
               Painel Operacional
             </h1>
           </div>
@@ -87,11 +92,11 @@ export function Sidebar() {
       </div>
 
       {/* Nav Groups */}
-      <nav className="flex-1 space-y-6 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-violet-500/20 scrollbar-track-transparent">
+      <nav className="flex-1 space-y-6 overflow-y-auto pr-1 scrollbar-thin">
         {navGroups.map((group) => (
           <div key={group.title} className="space-y-1">
             {/* Group Header */}
-            <p className="px-3.5 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-[--sk-text-muted]">
+            <p className="px-3.5 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--sk-text-muted)]">
               {group.title}
             </p>
             {/* Group Items */}
@@ -105,16 +110,16 @@ export function Sidebar() {
                     className={cn(
                       "flex items-center gap-3 rounded-xl px-3.5 py-2 text-sm font-medium transition-all duration-150",
                       active
-                        ? "bg-brand-violet/18 text-white ring-1 ring-brand-violet/28 shadow-[0_2px_8px_rgba(124,58,237,0.18)]"
-                        : "text-[--sk-text-muted] hover:bg-violet-500/8 hover:text-slate-200"
+                        ? "bg-[var(--sk-bg-active)] text-[var(--sk-text-primary)] ring-1 ring-[var(--sk-border-strong)] shadow-[var(--sk-shadow-sm)]"
+                        : "text-[var(--sk-text-muted)] hover:bg-[var(--sk-bg-hover)] hover:text-[var(--sk-text-secondary)]"
                     )}
                     href={item.href}
                     key={item.href}
                   >
                     <Icon
                       className={cn(
-                        "h-[17px] w-[17px] shrink-0",
-                        active ? "text-brand-cyan" : "text-[--sk-text-muted]"
+                        "h-[17px] w-[17px] shrink-0 transition-colors",
+                        active ? "text-brand-cyan" : "text-[var(--sk-text-muted)]"
                       )}
                     />
                     <span>{item.label}</span>
@@ -131,16 +136,19 @@ export function Sidebar() {
 
       {/* Plan card */}
       <div
-        className="mt-4 rounded-[22px] border border-violet-500/18 p-4"
+        className={cn(
+          "mt-4 rounded-[22px] border p-4",
+          "bg-[var(--sk-bg-card)] border-[var(--sk-border)]"
+        )}
         style={{ background: "var(--sk-gradient-brand-soft)" }}
       >
-        <p className="text-[10px] font-medium uppercase tracking-[0.24em] text-[--sk-text-brand]">
+        <p className="text-[10px] font-medium uppercase tracking-[0.24em] text-[var(--sk-text-brand)]">
           Plano atual
         </p>
-        <h2 className="font-display mt-1.5 text-lg font-semibold text-white">
+        <h2 className="font-display mt-1.5 text-lg font-semibold text-[var(--sk-text-primary)]">
           SkinnIA Pro
         </h2>
-        <p className="mt-1.5 text-sm text-[--sk-text-secondary] leading-relaxed">
+        <p className="mt-1.5 text-sm text-[var(--sk-text-secondary)] leading-relaxed">
           WhatsApp ativo, automações monitoradas e painel pronto para operação multi-unidade.
         </p>
       </div>

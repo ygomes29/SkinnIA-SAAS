@@ -22,6 +22,7 @@ import { Select } from "@/components/ui/select";
 import { useAppointments } from "@/lib/hooks/use-appointments";
 import { formatCurrency } from "@/lib/utils/currency";
 import { formatDateTime } from "@/lib/utils/date";
+import { cn } from "@/lib/utils/cn";
 import type { Appointment, Client, Professional, Service } from "@/types/skinnia";
 
 function TimeCell({
@@ -37,9 +38,12 @@ function TimeCell({
 
   return (
     <div
-      className={`min-h-[120px] rounded-3xl border border-dashed p-3 text-left transition ${
-        isOver ? "border-violet-400/50 bg-violet-500/10" : "border-white/10 bg-white/[0.02]"
-      }`}
+      className={cn(
+        "min-h-[120px] rounded-3xl border border-dashed p-3 text-left transition-all duration-200",
+        isOver
+          ? "border-[var(--sk-brand-400)]/50 bg-[var(--sk-brand-500)]/10"
+          : "border-[var(--sk-border)] bg-[var(--sk-bg-panel)]"
+      )}
       onClick={onCreate}
       onKeyDown={(event) => {
         if (event.key === "Enter" || event.key === " ") {
@@ -51,7 +55,7 @@ function TimeCell({
       role="button"
       tabIndex={0}
     >
-      {children ?? <span className="text-xs text-slate-500">Clique para novo agendamento</span>}
+      {children ?? <span className="text-xs text-[var(--sk-text-muted)]">Clique para novo agendamento</span>}
     </div>
   );
 }
@@ -203,7 +207,7 @@ export function CalendarView({
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="relative overflow-x-auto pb-2 -mx-6 px-6 scrollbar-thin scrollbar-thumb-violet-500/30 scrollbar-track-transparent">
+          <div className="relative overflow-x-auto pb-2 -mx-6 px-6 scrollbar-thin">
             <DndContext onDragEnd={handleDragEnd}>
               <div
                 className="grid gap-3"
@@ -214,17 +218,23 @@ export function CalendarView({
               >
               <div />
               {days.map((day) => (
-                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3 text-center" key={day.toISOString()}>
-                  <p className="text-xs uppercase tracking-[0.15em] text-slate-500">
+                <div
+                  className={cn(
+                    "rounded-2xl border p-3 text-center",
+                    "border-[var(--sk-border)] bg-[var(--sk-bg-panel)]"
+                  )}
+                  key={day.toISOString()}
+                >
+                  <p className="text-xs uppercase tracking-[0.15em] text-[var(--sk-text-muted)]">
                     {format(day, "EEE", { locale: ptBR })}
                   </p>
-                  <p className="mt-1 text-base font-semibold text-white">{format(day, "dd/MM")}</p>
+                  <p className="mt-1 text-base font-semibold text-[var(--sk-text-primary)]">{format(day, "dd/MM")}</p>
                 </div>
               ))}
 
               {timeSlots.map((time) => (
                 <div className="contents" key={time}>
-                  <div className="flex items-start pt-4 text-sm text-slate-500">{time}</div>
+                  <div className="flex items-start pt-4 text-sm text-[var(--sk-text-muted)]">{time}</div>
                   {days.map((day) => {
                     const [hour] = time.split(":").map(Number);
                     const slotDate = setMinutes(setHours(day, hour), 0);
@@ -265,7 +275,7 @@ export function CalendarView({
       >
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
-            <label className="text-sm text-slate-300">Cliente</label>
+            <label className="text-sm text-[var(--sk-text-secondary)]">Cliente</label>
             <Select value={clientId} onChange={(event) => setClientId(event.target.value)}>
               {clients.map((client) => (
                 <option key={client.id} value={client.id}>
@@ -275,7 +285,7 @@ export function CalendarView({
             </Select>
           </div>
           <div className="space-y-2">
-            <label className="text-sm text-slate-300">Serviço</label>
+            <label className="text-sm text-[var(--sk-text-secondary)]">Serviço</label>
             <Select value={serviceId} onChange={(event) => setServiceId(event.target.value)}>
               {services.map((service) => (
                 <option key={service.id} value={service.id}>
@@ -285,7 +295,7 @@ export function CalendarView({
             </Select>
           </div>
           <div className="space-y-2">
-            <label className="text-sm text-slate-300">Profissional</label>
+            <label className="text-sm text-[var(--sk-text-secondary)]">Profissional</label>
             <Select value={professionalId} onChange={(event) => setProfessionalId(event.target.value)}>
               {professionals.map((professional) => (
                 <option key={professional.id} value={professional.id}>
@@ -295,9 +305,12 @@ export function CalendarView({
             </Select>
           </div>
           <div className="space-y-2">
-            <label className="text-sm text-slate-300">Data e hora</label>
+            <label className="text-sm text-[var(--sk-text-secondary)]">Data e hora</label>
             <input
-              className="flex h-11 w-full rounded-2xl border border-white/10 bg-slate-950/50 px-4 py-2 text-sm text-slate-100"
+              className={cn(
+                "flex h-11 w-full rounded-2xl border px-4 py-2 text-sm",
+                "border-[var(--sk-border)] bg-[var(--sk-bg-input)] text-[var(--sk-text-primary)]"
+              )}
               onChange={(event) => setSelectedSlot(new Date(event.target.value).toISOString())}
               type="datetime-local"
               value={selectedSlot ? toDateTimeLocal(selectedSlot) : ""}
@@ -305,24 +318,33 @@ export function CalendarView({
           </div>
         </div>
 
-        <div className="mt-4 rounded-3xl border border-white/10 bg-slate-950/40 p-4">
-          <p className="text-sm text-slate-400">Prévia do resumo</p>
-          <p className="mt-2 font-semibold text-white">
+        <div className={cn(
+          "mt-4 rounded-3xl border p-4",
+          "border-[var(--sk-border)] bg-[var(--sk-bg-panel)]"
+        )}>
+          <p className="text-sm text-[var(--sk-text-muted)]">Prévia do resumo</p>
+          <p className="mt-2 font-semibold text-[var(--sk-text-primary)]">
             {clients.find((client) => client.id === clientId)?.name} •{" "}
             {services.find((service) => service.id === serviceId)?.name}
           </p>
-          <p className="mt-1 text-sm text-slate-300">
+          <p className="mt-1 text-sm text-[var(--sk-text-secondary)]">
             {selectedSlot ? formatDateTime(new Date(selectedSlot).toISOString()) : "Sem horário selecionado"}
           </p>
-          <p className="mt-1 text-sm text-slate-300">
+          <p className="mt-1 text-sm text-[var(--sk-text-secondary)]">
             Valor {formatCurrency(services.find((service) => service.id === serviceId)?.price ?? 0)}
           </p>
         </div>
 
-        <label className="mt-4 flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-slate-300">
+        <label className={cn(
+          "mt-4 flex items-center gap-3 rounded-2xl border px-4 py-3 text-sm",
+          "border-[var(--sk-border)] bg-[var(--sk-bg-panel)] text-[var(--sk-text-secondary)]"
+        )}>
           <input
             checked={chargeDeposit}
-            className="h-4 w-4 rounded border-white/10 bg-slate-950"
+            className={cn(
+              "h-4 w-4 rounded",
+              "border-[var(--sk-border)] bg-[var(--sk-bg-input)]"
+            )}
             onChange={(event) => setChargeDeposit(event.target.checked)}
             type="checkbox"
           />
@@ -347,15 +369,18 @@ export function CalendarView({
       >
         {selectedAppointment ? (
           <div className="space-y-4">
-            <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-4">
-              <p className="text-sm text-slate-400">{selectedAppointment.service_name}</p>
-              <p className="mt-2 text-xl font-semibold text-white">
+            <div className={cn(
+              "rounded-3xl border p-4",
+              "border-[var(--sk-border)] bg-[var(--sk-bg-panel)]"
+            )}>
+              <p className="text-sm text-[var(--sk-text-muted)]">{selectedAppointment.service_name}</p>
+              <p className="mt-2 text-xl font-semibold text-[var(--sk-text-primary)]">
                 {formatDateTime(selectedAppointment.start_at)}
               </p>
-              <p className="mt-2 text-sm text-slate-300">
+              <p className="mt-2 text-sm text-[var(--sk-text-secondary)]">
                 Profissional: {selectedAppointment.professional_name}
               </p>
-              <p className="text-sm text-slate-300">
+              <p className="text-sm text-[var(--sk-text-secondary)]">
                 Valor: {formatCurrency(selectedAppointment.price)}
               </p>
             </div>

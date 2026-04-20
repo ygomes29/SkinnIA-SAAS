@@ -12,6 +12,7 @@ import { Select } from "@/components/ui/select";
 import { useClients } from "@/lib/hooks/use-clients";
 import { formatCurrency } from "@/lib/utils/currency";
 import { formatRelativeDate } from "@/lib/utils/date";
+import { cn } from "@/lib/utils/cn";
 import type { Appointment, Client, Professional } from "@/types/skinnia";
 
 type ClientDraft = {
@@ -194,7 +195,7 @@ export function ClientTable({
         <CardContent className="space-y-4 p-6">
           <div className="grid gap-4 lg:grid-cols-[1.3fr_repeat(3,minmax(0,0.6fr))_auto_auto]">
             <label className="relative block">
-              <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+              <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--sk-text-muted)]" />
               <Input
                 className="pl-10"
                 onChange={(e) => setQuery(e.target.value)}
@@ -233,7 +234,7 @@ export function ClientTable({
           <div className="overflow-x-auto">
             <table className="w-full min-w-[980px] border-separate border-spacing-y-3">
               <thead>
-                <tr className="text-left text-xs uppercase tracking-[0.18em] text-slate-500">
+                <tr className="text-left text-xs uppercase tracking-[0.18em] text-[var(--sk-text-muted)]">
                   <th className="px-4">Cliente</th>
                   <th className="px-4">Telefone</th>
                   <th className="px-4">Agendamentos</th>
@@ -246,19 +247,25 @@ export function ClientTable({
               </thead>
               <tbody>
                 {filteredClients.map((client) => (
-                  <tr className="rounded-3xl bg-white/[0.03]" key={client.id}>
+                  <tr
+                    className={cn(
+                      "rounded-3xl",
+                      "bg-[var(--sk-bg-soft)]"
+                    )}
+                    key={client.id}
+                  >
                     <td className="rounded-l-3xl px-4 py-4">
                       <div>
-                        <p className="font-semibold text-white">{client.name}</p>
-                        <p className="text-sm text-slate-500">
+                        <p className="font-semibold text-[var(--sk-text-primary)]">{client.name}</p>
+                        <p className="text-sm text-[var(--sk-text-muted)]">
                           Profissional favorita: {favoriteProfessional(client, appointments, professionals)}
                         </p>
                       </div>
                     </td>
-                    <td className="px-4 py-4 text-sm text-slate-300">{client.phone}</td>
-                    <td className="px-4 py-4 text-sm text-slate-300">{client.total_appointments}</td>
-                    <td className="px-4 py-4 text-sm text-slate-300">{formatCurrency(client.ltv)}</td>
-                    <td className="px-4 py-4 text-sm text-slate-300">
+                    <td className="px-4 py-4 text-sm text-[var(--sk-text-secondary)]">{client.phone}</td>
+                    <td className="px-4 py-4 text-sm text-[var(--sk-text-secondary)]">{client.total_appointments}</td>
+                    <td className="px-4 py-4 text-sm text-[var(--sk-text-secondary)]">{formatCurrency(client.ltv)}</td>
+                    <td className="px-4 py-4 text-sm text-[var(--sk-text-secondary)]">
                       {formatRelativeDate(client.last_appointment_at)}
                     </td>
                     <td className="px-4 py-4">
@@ -294,7 +301,7 @@ export function ClientTable({
                 ))}
                 {filteredClients.length === 0 && (
                   <tr>
-                    <td className="px-4 py-8 text-center text-sm text-slate-500" colSpan={8}>
+                    <td className="px-4 py-8 text-center text-sm text-[var(--sk-text-muted)]" colSpan={8}>
                       Nenhum cliente encontrado.
                     </td>
                   </tr>
@@ -315,25 +322,25 @@ export function ClientTable({
         <div className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1">
-              <label className="text-xs text-slate-400">Nome *</label>
+              <label className="text-xs text-[var(--sk-text-muted)]">Nome *</label>
               <Input onChange={field("name")} placeholder="Nome completo" value={draft.name} />
             </div>
             <div className="space-y-1">
-              <label className="text-xs text-slate-400">Telefone / WhatsApp *</label>
+              <label className="text-xs text-[var(--sk-text-muted)]">Telefone / WhatsApp *</label>
               <Input onChange={field("phone")} placeholder="(11) 99999-9999" value={draft.phone} />
             </div>
             <div className="space-y-1">
-              <label className="text-xs text-slate-400">E-mail</label>
+              <label className="text-xs text-[var(--sk-text-muted)]">E-mail</label>
               <Input onChange={field("email")} placeholder="email@exemplo.com" type="email" value={draft.email} />
             </div>
             <div className="space-y-1">
-              <label className="text-xs text-slate-400">Data de nascimento</label>
+              <label className="text-xs text-[var(--sk-text-muted)]">Data de nascimento</label>
               <Input onChange={field("birthdate")} type="date" value={draft.birthdate} />
             </div>
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs text-slate-400">Profissional preferida</label>
+            <label className="text-xs text-[var(--sk-text-muted)]">Profissional preferida</label>
             <Select onChange={field("preferred_professional_id")} value={draft.preferred_professional_id}>
               <option value="">Sem preferência</option>
               {professionals.map((p) => (
@@ -343,13 +350,13 @@ export function ClientTable({
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs text-slate-400">Tags (separadas por vírgula)</label>
+            <label className="text-xs text-[var(--sk-text-muted)]">Tags (separadas por vírgula)</label>
             <Input onChange={field("tags")} placeholder="vip, retorno, pele-sensível" value={draft.tags} />
           </div>
 
           {editing && (
             <div className="space-y-1">
-              <label className="text-xs text-slate-400">Status</label>
+              <label className="text-xs text-[var(--sk-text-muted)]">Status</label>
               <Select
                 onChange={(e) =>
                   setDraft((prev) => ({ ...prev, status: e.target.value as ClientDraft["status"] }))
@@ -364,9 +371,14 @@ export function ClientTable({
           )}
 
           <div className="space-y-1">
-            <label className="text-xs text-slate-400">Observações</label>
+            <label className="text-xs text-[var(--sk-text-muted)]">Observações</label>
             <textarea
-              className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-[--sk-brand]"
+              className={cn(
+                "w-full rounded-2xl border px-4 py-3 text-sm transition-all",
+                "border-[var(--sk-border)] bg-[var(--sk-bg-input)]",
+                "text-[var(--sk-text-primary)] placeholder:text-[var(--sk-text-muted)]",
+                "focus:outline-none focus:ring-1 focus:ring-[var(--sk-brand-500)]"
+              )}
               onChange={field("notes")}
               placeholder="Alergias, preferências, histórico relevante..."
               rows={3}
@@ -374,7 +386,7 @@ export function ClientTable({
             />
           </div>
 
-          {formError && <p className="text-sm text-red-400">{formError}</p>}
+          {formError && <p className="text-sm text-[var(--sk-danger)]">{formError}</p>}
 
           <div className="flex justify-end gap-3">
             <Button onClick={closeForm} variant="secondary">Cancelar</Button>
@@ -396,12 +408,15 @@ export function ClientTable({
       >
         {selectedClient ? (
           <div className="space-y-5">
-            <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-4">
-              <p className="text-sm text-slate-400">{selectedClient.phone}</p>
+            <div className={cn(
+              "rounded-3xl border p-4",
+              "border-[var(--sk-border)] bg-[var(--sk-bg-panel)]"
+            )}>
+              <p className="text-sm text-[var(--sk-text-muted)]">{selectedClient.phone}</p>
               {selectedClient.email && (
-                <p className="mt-1 text-sm text-slate-400">{selectedClient.email}</p>
+                <p className="mt-1 text-sm text-[var(--sk-text-muted)]">{selectedClient.email}</p>
               )}
-              <p className="mt-3 text-sm text-slate-300">
+              <p className="mt-3 text-sm text-[var(--sk-text-secondary)]">
                 Último atendimento {formatRelativeDate(selectedClient.last_appointment_at)}
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
@@ -413,51 +428,66 @@ export function ClientTable({
 
             <div className="grid gap-3 sm:grid-cols-2">
               <Card className="p-4">
-                <p className="text-sm text-slate-400">Histórico de agendamentos</p>
-                <p className="mt-2 text-3xl font-semibold text-white">{selectedClient.total_appointments}</p>
+                <p className="text-sm text-[var(--sk-text-muted)]">Histórico de agendamentos</p>
+                <p className="mt-2 text-3xl font-semibold text-[var(--sk-text-primary)]">{selectedClient.total_appointments}</p>
               </Card>
               <Card className="p-4">
-                <p className="text-sm text-slate-400">Créditos em carteira</p>
-                <p className="mt-2 text-3xl font-semibold text-white">R$ 0,00</p>
+                <p className="text-sm text-[var(--sk-text-muted)]">Créditos em carteira</p>
+                <p className="mt-2 text-3xl font-semibold text-[var(--sk-text-primary)]">R$ 0,00</p>
               </Card>
             </div>
 
-            <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-4">
-              <p className="text-sm font-medium text-white">Serviços mais frequentes</p>
+            <div className={cn(
+              "rounded-3xl border p-4",
+              "border-[var(--sk-border)] bg-[var(--sk-bg-panel)]"
+            )}>
+              <p className="text-sm font-medium text-[var(--sk-text-primary)]">Serviços mais frequentes</p>
               <div className="mt-3 space-y-2">
                 {Object.entries(serviceFrequency).map(([service, total]) => (
                   <div className="flex items-center justify-between" key={service}>
-                    <span className="text-sm text-slate-300">{service}</span>
-                    <span className="text-sm text-slate-400">{total}x</span>
+                    <span className="text-sm text-[var(--sk-text-secondary)]">{service}</span>
+                    <span className="text-sm text-[var(--sk-text-muted)]">{total}x</span>
                   </div>
                 ))}
                 {Object.keys(serviceFrequency).length === 0 && (
-                  <p className="text-sm text-slate-500">Sem histórico suficiente.</p>
+                  <p className="text-sm text-[var(--sk-text-muted)]">Sem histórico suficiente.</p>
                 )}
               </div>
             </div>
 
-            <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-4">
-              <p className="text-sm font-medium text-white">Histórico completo</p>
+            <div className={cn(
+              "rounded-3xl border p-4",
+              "border-[var(--sk-border)] bg-[var(--sk-bg-panel)]"
+            )}>
+              <p className="text-sm font-medium text-[var(--sk-text-primary)]">Histórico completo</p>
               <div className="mt-3 space-y-3">
                 {clientAppointments.map((a) => (
-                  <div className="rounded-2xl border border-white/10 bg-slate-950/40 p-3" key={a.id}>
-                    <p className="font-medium text-white">{a.service_name}</p>
-                    <p className="text-sm text-slate-400">
+                  <div
+                    className={cn(
+                      "rounded-2xl border p-3",
+                      "border-[var(--sk-border)] bg-[var(--sk-bg-card)]"
+                    )}
+                    key={a.id}
+                  >
+                    <p className="font-medium text-[var(--sk-text-primary)]">{a.service_name}</p>
+                    <p className="text-sm text-[var(--sk-text-muted)]">
                       {formatRelativeDate(a.start_at)} • {a.professional_name}
                     </p>
                   </div>
                 ))}
                 {clientAppointments.length === 0 && (
-                  <p className="text-sm text-slate-500">Nenhum agendamento encontrado.</p>
+                  <p className="text-sm text-[var(--sk-text-muted)]">Nenhum agendamento encontrado.</p>
                 )}
               </div>
             </div>
 
             {selectedClient.notes && (
-              <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-4">
-                <p className="text-sm font-medium text-white">Observações</p>
-                <p className="mt-2 text-sm text-slate-400">{selectedClient.notes}</p>
+              <div className={cn(
+                "rounded-3xl border p-4",
+                "border-[var(--sk-border)] bg-[var(--sk-bg-panel)]"
+              )}>
+                <p className="text-sm font-medium text-[var(--sk-text-primary)]">Observações</p>
+                <p className="mt-2 text-sm text-[var(--sk-text-muted)]">{selectedClient.notes}</p>
               </div>
             )}
 

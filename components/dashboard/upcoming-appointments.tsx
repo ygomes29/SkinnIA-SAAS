@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { formatCurrency } from "@/lib/utils/currency";
 import { formatTime } from "@/lib/utils/date";
+import { cn } from "@/lib/utils/cn";
 import type { Appointment } from "@/types/skinnia";
 
 function statusVariant(status: Appointment["status"]) {
@@ -98,11 +99,16 @@ export function UpcomingAppointments({
       </CardHeader>
       <CardContent className="space-y-3">
         {appointments.length === 0 && (
-          <p className="py-6 text-center text-sm text-slate-500">Nenhum agendamento para hoje.</p>
+          <p className="py-6 text-center text-sm text-[var(--sk-text-muted)]">
+            Nenhum agendamento para hoje.
+          </p>
         )}
         {appointments.map((appointment) => (
           <div
-            className="flex flex-col gap-4 rounded-3xl border border-white/10 bg-slate-950/30 p-4 md:flex-row md:items-center md:justify-between"
+            className={cn(
+              "flex flex-col gap-4 rounded-3xl border p-4 md:flex-row md:items-center md:justify-between",
+              "border-[var(--sk-border)] bg-[var(--sk-bg-panel)]"
+            )}
             key={appointment.id}
           >
             <div className="flex items-center gap-4">
@@ -113,13 +119,13 @@ export function UpcomingAppointments({
               <Avatar name={appointment.professional_name} imageUrl={appointment.professional_avatar} />
               <div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <h4 className="font-semibold text-white">{appointment.client_name}</h4>
+                  <h4 className="font-semibold text-[var(--sk-text-primary)]">{appointment.client_name}</h4>
                   <Badge variant={statusVariant(appointment.status)}>{appointment.status}</Badge>
                 </div>
-                <p className="text-sm text-slate-300">
+                <p className="text-sm text-[var(--sk-text-secondary)]">
                   {appointment.service_name} com {appointment.professional_name}
                 </p>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-[var(--sk-text-muted)]">
                   {formatTime(appointment.start_at)} às {formatTime(appointment.end_at)} •{" "}
                   {formatCurrency(appointment.price)}
                 </p>

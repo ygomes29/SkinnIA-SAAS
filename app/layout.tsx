@@ -4,6 +4,7 @@ import { GeistSans } from "geist/font/sans";
 import { Plus_Jakarta_Sans } from "next/font/google";
 
 import "@/app/globals.css";
+import { ThemeProvider } from "@/lib/theme/ThemeProvider";
 
 // Tipografia de display para headings (h1, h2, h3)
 const plusJakarta = Plus_Jakarta_Sans({
@@ -24,8 +25,12 @@ export default function RootLayout({
   children: ReactNode;
 }>) {
   return (
-    <html className={`${GeistSans.className} ${plusJakarta.variable}`} lang="pt-BR">
-      <body>{children}</body>
+    <html className={`${GeistSans.className} ${plusJakarta.variable} dark`} lang="pt-BR" suppressHydrationWarning>
+      <body>
+        <ThemeProvider>
+          {children}
+        </ThemeProvider>
+      </body>
     </html>
   );
 }

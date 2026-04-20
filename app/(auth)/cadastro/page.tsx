@@ -15,7 +15,9 @@ function SubmitButton() {
   return (
     <button
       className={cn(
-        "group relative flex w-full items-center justify-center rounded-xl bg-[#5C5CFF] py-3.5 text-sm font-semibold text-white transition-all duration-200 hover:bg-[#4B4BFF] hover:shadow-[0_0_20px_rgba(92,92,255,0.3)] disabled:opacity-70",
+        "group relative flex w-full items-center justify-center rounded-xl py-3.5 text-sm font-semibold text-white transition-all duration-200",
+        "bg-gradient-to-r from-[#5C5CFF] to-[#7C3AED] hover:shadow-[0_0_20px_rgba(92,92,255,0.3)]",
+        "disabled:opacity-70",
         pending && "cursor-not-allowed"
       )}
       disabled={pending}
@@ -38,7 +40,10 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
 
   return (
-    <div className="flex w-full max-w-[1200px] flex-col overflow-hidden rounded-[32px] bg-white shadow-premium lg:h-[760px] lg:flex-row">
+    <div className={cn(
+      "flex w-full max-w-[1200px] flex-col overflow-hidden rounded-[32px] lg:h-[760px] lg:flex-row",
+      "bg-[var(--sk-bg-card)] shadow-premium"
+    )}>
       {/* Left Column: Visual Panel */}
       <div className="relative flex min-h-[300px] flex-col justify-between p-10 lg:w-[42%] lg:p-12">
         {/* Background Gradient */}
@@ -84,7 +89,12 @@ export default function RegisterPage() {
                 name="full_name"
                 placeholder="Seu nome completo"
                 required
-                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-[15px] text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-[#5C5CFF] focus:ring-4 focus:ring-[#5C5CFF]/5"
+                className={cn(
+                  "w-full rounded-xl border px-4 py-2.5 text-[15px] outline-none transition-all",
+                  "border-slate-200 bg-white text-slate-900",
+                  "placeholder:text-slate-400",
+                  "focus:border-[#5C5CFF] focus:ring-4 focus:ring-[#5C5CFF]/5"
+                )}
               />
             </div>
 
@@ -97,7 +107,12 @@ export default function RegisterPage() {
                 name="business_name"
                 placeholder="Nome do seu negócio"
                 required
-                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-[15px] text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-[#5C5CFF] focus:ring-4 focus:ring-[#5C5CFF]/5"
+                className={cn(
+                  "w-full rounded-xl border px-4 py-2.5 text-[15px] outline-none transition-all",
+                  "border-slate-200 bg-white text-slate-900",
+                  "placeholder:text-slate-400",
+                  "focus:border-[#5C5CFF] focus:ring-4 focus:ring-[#5C5CFF]/5"
+                )}
               />
             </div>
 
@@ -111,7 +126,12 @@ export default function RegisterPage() {
                 type="email"
                 placeholder="voce@empresa.com"
                 required
-                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-[15px] text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-[#5C5CFF] focus:ring-4 focus:ring-[#5C5CFF]/5"
+                className={cn(
+                  "w-full rounded-xl border px-4 py-2.5 text-[15px] outline-none transition-all",
+                  "border-slate-200 bg-white text-slate-900",
+                  "placeholder:text-slate-400",
+                  "focus:border-[#5C5CFF] focus:ring-4 focus:ring-[#5C5CFF]/5"
+                )}
               />
             </div>
 
@@ -128,7 +148,12 @@ export default function RegisterPage() {
                     placeholder="Crie uma senha"
                     required
                     minLength={8}
-                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-[15px] text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-[#5C5CFF] focus:ring-4 focus:ring-[#5C5CFF]/5"
+                    className={cn(
+                      "w-full rounded-xl border px-4 py-2 text-[15px] outline-none transition-all",
+                      "border-slate-200 bg-white text-slate-900",
+                      "placeholder:text-slate-400",
+                      "focus:border-[#5C5CFF] focus:ring-4 focus:ring-[#5C5CFF]/5"
+                    )}
                   />
                 </div>
               </div>
@@ -143,7 +168,12 @@ export default function RegisterPage() {
                     type={showPassword ? "text" : "password"}
                     placeholder="Repita sua senha"
                     required
-                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-[15px] text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-[#5C5CFF] focus:ring-4 focus:ring-[#5C5CFF]/5"
+                    className={cn(
+                      "w-full rounded-xl border px-4 py-2 text-[15px] outline-none transition-all",
+                      "border-slate-200 bg-white text-slate-900",
+                      "placeholder:text-slate-400",
+                      "focus:border-[#5C5CFF] focus:ring-4 focus:ring-[#5C5CFF]/5"
+                    )}
                   />
                   <button
                     type="button"

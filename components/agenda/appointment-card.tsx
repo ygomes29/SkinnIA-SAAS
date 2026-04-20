@@ -22,7 +22,9 @@ export function AppointmentCard({
   return (
     <button
       className={cn(
-        "w-full rounded-2xl border border-violet-500/15 bg-slate-950/80 p-3 text-left shadow-sm transition hover:border-violet-500/30",
+        "w-full rounded-2xl border p-3 text-left shadow-sm transition-all duration-200",
+        "border-[var(--sk-border)] bg-[var(--sk-bg-panel)]",
+        "hover:border-[var(--sk-border-strong)] hover:bg-[var(--sk-bg-card-hover)]",
         isDragging && "opacity-50"
       )}
       onClick={(event) => {
@@ -46,9 +48,9 @@ export function AppointmentCard({
           {appointment.status}
         </Badge>
       </div>
-      <p className="font-semibold text-white">{appointment.client_name}</p>
-      <p className="mt-1 text-sm text-slate-300">{appointment.service_name}</p>
-      <p className="mt-2 text-xs text-slate-500">
+      <p className="font-semibold text-[var(--sk-text-primary)]">{appointment.client_name}</p>
+      <p className="mt-1 text-sm text-[var(--sk-text-secondary)]">{appointment.service_name}</p>
+      <p className="mt-2 text-xs text-[var(--sk-text-muted)]">
         {formatTime(appointment.start_at)} • {appointment.professional_name}
       </p>
     </button>

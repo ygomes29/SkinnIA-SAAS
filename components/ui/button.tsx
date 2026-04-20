@@ -3,17 +3,25 @@ import * as React from "react";
 import { cn } from "@/lib/utils/cn";
 
 const variants = {
-  // Bridge: violet → cyan em vez de pink → purple
+  // Primary: gradiente brand com sombra premium
   default:
     "bg-gradient-to-r from-brand-violet via-purple-600 to-brand-cyan text-white shadow-brand hover:opacity-90 active:scale-[0.98]",
+
+  // Secondary: fundo suave com borda sutil
   secondary:
-    "border border-violet-500/20 bg-violet-500/10 text-slate-100 hover:bg-violet-500/15 hover:border-violet-400/30 transition-colors",
+    "border border-[var(--sk-border)] bg-[var(--sk-bg-soft)] text-[var(--sk-text-secondary)] hover:bg-[var(--sk-bg-hover)] hover:border-[var(--sk-border-strong)] hover:text-[var(--sk-text-primary)] transition-all",
+
+  // Ghost: apenas hover
   ghost:
-    "text-slate-300 hover:bg-violet-500/10 hover:text-white transition-colors",
+    "text-[var(--sk-text-muted)] hover:bg-[var(--sk-bg-hover)] hover:text-[var(--sk-text-primary)] transition-colors",
+
+  // Outline: transparente com borda
   outline:
-    "border border-violet-500/20 bg-transparent text-slate-100 hover:bg-violet-500/10 hover:border-violet-400/30 transition-colors",
+    "border border-[var(--sk-border)] bg-transparent text-[var(--sk-text-secondary)] hover:bg-[var(--sk-bg-hover)] hover:border-[var(--sk-border-strong)] hover:text-[var(--sk-text-primary)] transition-all",
+
+  // Destructive: erro/perigo
   destructive:
-    "bg-rose-500/90 text-white hover:bg-rose-500 active:scale-[0.98] transition-all"
+    "bg-[var(--sk-danger)] text-white hover:opacity-90 active:scale-[0.98] transition-all"
 };
 
 const sizes = {

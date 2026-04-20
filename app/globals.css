@@ -3,23 +3,26 @@
 @tailwind utilities;
 
 /* ─────────────────────────────────────────────────────────
-   BRIDGE THEME — SkinnIA
-   Estratégia: migrar por tokens, preservar estrutura atual.
-   Rosa (pink) → Violeta/Ciano como gradiente brand principal.
-   Shell escuro refinado com matiz purple em vez de navy puro.
+   SKINNIA DESIGN SYSTEM — Tema Dark/Light
+   Estratégia: tokens semânticos, design premium,
+   dark mode preservado como identidade principal,
+   light mode elegante e sofisticado.
 ───────────────────────────────────────────────────────── */
 
+/* ─────────────────────────────────────────────────────────
+   DARK MODE (Default/Padrão) — Identidade Premium SkinnIA
+───────────────────────────────────────────────────────── */
 :root {
   color-scheme: dark;
 
-  /* ── HSL tokens (Tailwind / shadcn compat) ── */
-  --background: 228 50% 7%;           /* era 222 47% 4% — mais purple-navy */
-  --foreground: 240 18% 96%;          /* era 210 40% 98% */
-  --card: 230 44% 11%;                /* era 222 47% 6% */
+  /* ── HSL Tokens (Tailwind/shadcn compat) ── */
+  --background: 228 50% 7%;
+  --foreground: 240 18% 96%;
+  --card: 230 44% 11%;
   --card-foreground: 240 18% 96%;
   --popover: 228 50% 7%;
   --popover-foreground: 240 18% 96%;
-  --primary: 263 72% 56%;             /* era 327 73% 59% (pink→violet) */
+  --primary: 263 72% 56%;
   --primary-foreground: 0 0% 100%;
   --secondary: 232 36% 15%;
   --secondary-foreground: 240 18% 96%;
@@ -29,11 +32,18 @@
   --accent-foreground: 240 18% 96%;
   --destructive: 0 84% 60%;
   --destructive-foreground: 210 40% 98%;
-  --border: 258 28% 20%;              /* era 217 33% 17% — matiz purple */
+  --border: 258 28% 20%;
   --input: 258 28% 20%;
-  --ring: 263 72% 56%;                /* acompanha primary */
+  --ring: 263 72% 56%;
 
-  /* ── SK Bridge Tokens ── */
+  /* ── Brand Colors ── */
+  --brand-violet: 263 72% 56%;
+  --brand-cyan: 199 89% 48%;
+  --brand-purple: 258 80% 60%;
+  --brand-pink: 330 80% 60%;
+
+  /* ── SkinnIA Design Tokens — Dark Mode ── */
+  /* Backgrounds */
   --sk-bg-app: #0B1020;
   --sk-bg-sidebar: #0D1226;
   --sk-bg-topbar: #10162B;
@@ -41,47 +51,171 @@
   --sk-bg-card: #17213B;
   --sk-bg-card-hover: #1B2644;
   --sk-bg-soft: #202B4D;
+  --sk-bg-input: rgba(255, 255, 255, 0.05);
+  --sk-bg-hover: rgba(139, 92, 246, 0.08);
+  --sk-bg-active: rgba(139, 92, 246, 0.15);
+  --sk-bg-elevated: #151d38;
 
+  /* Brand Scale */
+  --sk-brand-300: #C4B5FD;
   --sk-brand-400: #A78BFA;
   --sk-brand-500: #8B5CF6;
   --sk-brand-600: #7C3AED;
   --sk-brand-700: #6D28D9;
 
+  /* Accent Scale */
+  --sk-accent-300: #7DD3FC;
   --sk-accent-400: #38BDF8;
   --sk-accent-500: #0EA5E9;
+  --sk-accent-600: #0284C7;
   --sk-accent-teal: #2DD4BF;
 
+  /* Text Colors */
   --sk-text-primary: #F5F4FF;
   --sk-text-secondary: #C7CBE1;
   --sk-text-muted: #8E95B9;
   --sk-text-brand: #C4B5FD;
+  --sk-text-on-primary: #FFFFFF;
 
+  /* Border Colors */
   --sk-border-subtle: rgba(139, 92, 246, 0.10);
   --sk-border: rgba(139, 92, 246, 0.18);
   --sk-border-strong: rgba(139, 92, 246, 0.28);
+  --sk-border-focus: rgba(139, 92, 246, 0.50);
 
+  /* Shadows */
   --sk-shadow-sm: 0 1px 3px rgba(124, 58, 237, 0.10), 0 1px 2px rgba(0, 0, 0, 0.06);
   --sk-shadow-md: 0 6px 20px rgba(124, 58, 237, 0.14), 0 4px 10px rgba(0, 0, 0, 0.08);
   --sk-shadow-lg: 0 10px 28px rgba(124, 58, 237, 0.18), 0 8px 18px rgba(0, 0, 0, 0.10);
   --sk-shadow-brand: 0 8px 24px rgba(124, 58, 237, 0.28);
+  --sk-shadow-card: 0 4px 20px rgba(0, 0, 0, 0.25);
 
+  /* Gradients */
   --sk-gradient-brand: linear-gradient(135deg, #7C3AED 0%, #0EA5E9 100%);
   --sk-gradient-brand-soft: linear-gradient(135deg, rgba(124, 58, 237, 0.18) 0%, rgba(14, 165, 233, 0.14) 100%);
+  --sk-gradient-brand-subtle: linear-gradient(135deg, rgba(124, 58, 237, 0.08) 0%, rgba(14, 165, 233, 0.06) 100%);
   --sk-gradient-panel: linear-gradient(180deg, rgba(255, 255, 255, 0.02) 0%, rgba(255, 255, 255, 0.00) 100%);
+  --sk-gradient-sidebar: linear-gradient(180deg, rgba(124, 58, 237, 0.05) 0%, transparent 60%);
 
+  /* Semantic Colors */
   --sk-success: #10B981;
   --sk-success-bg: rgba(16, 185, 129, 0.14);
+  --sk-success-border: rgba(16, 185, 129, 0.25);
   --sk-warning: #F59E0B;
   --sk-warning-bg: rgba(245, 158, 11, 0.14);
+  --sk-warning-border: rgba(245, 158, 11, 0.25);
   --sk-danger: #EF4444;
   --sk-danger-bg: rgba(239, 68, 68, 0.14);
+  --sk-danger-border: rgba(239, 68, 68, 0.25);
   --sk-info: #38BDF8;
   --sk-info-bg: rgba(56, 189, 248, 0.14);
+  --sk-info-border: rgba(56, 189, 248, 0.25);
 
+  /* Radius */
   --sk-radius-sm: 8px;
   --sk-radius-md: 14px;
   --sk-radius-lg: 18px;
   --sk-radius-xl: 22px;
+  --sk-radius-2xl: 28px;
+  --sk-radius-full: 9999px;
+}
+
+/* ─────────────────────────────────────────────────────────
+   LIGHT MODE — Elegante, Sofisticado, Premium
+   Baseado no conceito visual da tela de login/cadastro
+───────────────────────────────────────────────────────── */
+.light {
+  color-scheme: light;
+
+  /* ── HSL Tokens (Light) ── */
+  --background: 240 20% 98%;
+  --foreground: 222 47% 11%;
+  --card: 0 0% 100%;
+  --card-foreground: 222 47% 11%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222 47% 11%;
+  --primary: 263 72% 52%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 240 20% 96%;
+  --secondary-foreground: 222 47% 11%;
+  --muted: 240 20% 96%;
+  --muted-foreground: 222 20% 45%;
+  --accent: 262 70% 55%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 240 20% 90%;
+  --input: 240 20% 90%;
+  --ring: 263 72% 52%;
+
+  /* ── SkinnIA Design Tokens — Light Mode ── */
+  /* Backgrounds - Off-white sofisticado com nuance lilás */
+  --sk-bg-app: #F8F7FB;
+  --sk-bg-sidebar: #FFFFFF;
+  --sk-bg-topbar: rgba(255, 255, 255, 0.85);
+  --sk-bg-panel: #FFFFFF;
+  --sk-bg-card: #FFFFFF;
+  --sk-bg-card-hover: #FAFAFC;
+  --sk-bg-soft: #F0EFF4;
+  --sk-bg-input: #FFFFFF;
+  --sk-bg-hover: rgba(124, 58, 237, 0.04);
+  --sk-bg-active: rgba(124, 58, 237, 0.08);
+  --sk-bg-elevated: #FFFFFF;
+
+  /* Brand Scale - Mantendo a identidade */
+  --sk-brand-300: #8B5CF6;
+  --sk-brand-400: #7C3AED;
+  --sk-brand-500: #6D28D9;
+  --sk-brand-600: #5B21B6;
+  --sk-brand-700: #4C1D95;
+
+  /* Accent Scale */
+  --sk-accent-300: #0EA5E9;
+  --sk-accent-400: #0284C7;
+  --sk-accent-500: #0369A1;
+  --sk-accent-600: #075985;
+  --sk-accent-teal: #14B8A6;
+
+  /* Text Colors - Tom escuro elegante, não preto absoluto */
+  --sk-text-primary: #1E1B2E;
+  --sk-text-secondary: #4A4760;
+  --sk-text-muted: #7C7999;
+  --sk-text-brand: #6D28D9;
+  --sk-text-on-primary: #FFFFFF;
+
+  /* Border Colors - Suaves e elegantes */
+  --sk-border-subtle: rgba(124, 58, 237, 0.08);
+  --sk-border: rgba(124, 58, 237, 0.12);
+  --sk-border-strong: rgba(124, 58, 237, 0.20);
+  --sk-border-focus: rgba(124, 58, 237, 0.35);
+
+  /* Shadows - Delicadas e sofisticadas */
+  --sk-shadow-sm: 0 1px 2px rgba(14, 12, 32, 0.05), 0 1px 3px rgba(14, 12, 32, 0.03);
+  --sk-shadow-md: 0 4px 12px rgba(14, 12, 32, 0.08), 0 2px 6px rgba(14, 12, 32, 0.04);
+  --sk-shadow-lg: 0 8px 24px rgba(14, 12, 32, 0.10), 0 4px 12px rgba(14, 12, 32, 0.06);
+  --sk-shadow-brand: 0 8px 24px rgba(124, 58, 237, 0.18);
+  --sk-shadow-card: 0 2px 12px rgba(14, 12, 32, 0.08);
+
+  /* Gradients */
+  --sk-gradient-brand: linear-gradient(135deg, #6D28D9 0%, #0EA5E9 100%);
+  --sk-gradient-brand-soft: linear-gradient(135deg, rgba(124, 58, 237, 0.08) 0%, rgba(14, 165, 233, 0.06) 100%);
+  --sk-gradient-brand-subtle: linear-gradient(135deg, rgba(124, 58, 237, 0.04) 0%, rgba(14, 165, 233, 0.03) 100%);
+  --sk-gradient-panel: linear-gradient(180deg, rgba(255, 255, 255, 0.80) 0%, rgba(255, 255, 255, 0.40) 100%);
+  --sk-gradient-sidebar: linear-gradient(180deg, rgba(124, 58, 237, 0.03) 0%, transparent 60%);
+
+  /* Semantic Colors */
+  --sk-success: #10B981;
+  --sk-success-bg: rgba(16, 185, 129, 0.10);
+  --sk-success-border: rgba(16, 185, 129, 0.20);
+  --sk-warning: #F59E0B;
+  --sk-warning-bg: rgba(245, 158, 11, 0.10);
+  --sk-warning-border: rgba(245, 158, 11, 0.20);
+  --sk-danger: #EF4444;
+  --sk-danger-bg: rgba(239, 68, 68, 0.10);
+  --sk-danger-border: rgba(239, 68, 68, 0.20);
+  --sk-info: #0EA5E9;
+  --sk-info-bg: rgba(14, 165, 233, 0.10);
+  --sk-info-border: rgba(14, 165, 233, 0.20);
 }
 
 /* ── Base ── */
@@ -96,13 +230,25 @@ html {
 
 body {
   min-height: 100vh;
-  /* Bridge: orb esquerdo violet, orb direito cyan — base navy escura */
+  color: hsl(var(--foreground));
+}
+
+/* Dark mode backgrounds */
+.dark body {
   background:
     radial-gradient(circle at 10% 0%, rgba(124, 58, 237, 0.16), transparent 28%),
     radial-gradient(circle at 92% 0%, rgba(14, 165, 233, 0.12), transparent 26%),
     radial-gradient(circle at 50% 80%, rgba(124, 58, 237, 0.05), transparent 40%),
     linear-gradient(180deg, var(--sk-bg-sidebar) 0%, var(--sk-bg-app) 100%);
-  color: hsl(var(--foreground));
+}
+
+/* Light mode backgrounds - suave e sofisticado */
+.light body {
+  background:
+    radial-gradient(circle at 10% 0%, rgba(124, 58, 237, 0.06), transparent 30%),
+    radial-gradient(circle at 92% 0%, rgba(14, 165, 233, 0.04), transparent 28%),
+    radial-gradient(circle at 50% 80%, rgba(124, 58, 237, 0.02), transparent 45%),
+    linear-gradient(180deg, var(--sk-bg-app) 0%, #F0EFF4 100%);
 }
 
 a {
@@ -112,16 +258,14 @@ a {
 
 /* ── Tipografia ── */
 
-/* headings usam Plus Jakarta Sans se disponível via CSS var */
 h1, h2, h3 {
   font-family: var(--font-display, inherit);
 }
 
-/* números em métricas herdam GeistSans (excelente para dados) */
-
 /* ── Scrollbar refinada ── */
 ::-webkit-scrollbar {
   width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
@@ -140,7 +284,15 @@ h1, h2, h3 {
   background-clip: padding-box;
 }
 
-/* ── Utilitários de bridge (usados nos componentes) ── */
+.light ::-webkit-scrollbar-thumb {
+  background: rgba(124, 58, 237, 0.12);
+}
+
+.light ::-webkit-scrollbar-thumb:hover {
+  background: rgba(124, 58, 237, 0.22);
+}
+
+/* ── Utilitários ── */
 
 @layer utilities {
   .sk-border {
@@ -149,11 +301,23 @@ h1, h2, h3 {
   .sk-border-subtle {
     border-color: var(--sk-border-subtle);
   }
+  .sk-border-strong {
+    border-color: var(--sk-border-strong);
+  }
   .sk-shadow-brand {
     box-shadow: var(--sk-shadow-brand);
   }
   .sk-shadow-card {
+    box-shadow: var(--sk-shadow-card);
+  }
+  .sk-shadow-sm {
+    box-shadow: var(--sk-shadow-sm);
+  }
+  .sk-shadow-md {
     box-shadow: var(--sk-shadow-md);
+  }
+  .sk-shadow-lg {
+    box-shadow: var(--sk-shadow-lg);
   }
   .sk-gradient-brand {
     background: var(--sk-gradient-brand);
@@ -161,11 +325,32 @@ h1, h2, h3 {
   .sk-gradient-brand-soft {
     background: var(--sk-gradient-brand-soft);
   }
+  .sk-gradient-brand-subtle {
+    background: var(--sk-gradient-brand-subtle);
+  }
   .sk-text-brand {
     color: var(--sk-text-brand);
   }
   .sk-text-muted {
     color: var(--sk-text-muted);
+  }
+  .sk-text-primary {
+    color: var(--sk-text-primary);
+  }
+  .sk-text-secondary {
+    color: var(--sk-text-secondary);
+  }
+  .sk-bg-card {
+    background-color: var(--sk-bg-card);
+  }
+  .sk-bg-panel {
+    background-color: var(--sk-bg-panel);
+  }
+  .sk-bg-soft {
+    background-color: var(--sk-bg-soft);
+  }
+  .sk-bg-app {
+    background-color: var(--sk-bg-app);
   }
 }
 

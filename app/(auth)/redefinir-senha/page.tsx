@@ -16,7 +16,9 @@ function SubmitButton() {
   return (
     <button
       className={cn(
-        "group relative flex w-full items-center justify-center rounded-xl bg-[#5C5CFF] py-3.5 text-sm font-semibold text-white transition-all duration-200 hover:bg-[#4B4BFF] hover:shadow-[0_0_20px_rgba(92,92,255,0.3)] disabled:opacity-70",
+        "group relative flex w-full items-center justify-center rounded-xl py-3.5 text-sm font-semibold text-white transition-all duration-200",
+        "bg-gradient-to-r from-[#5C5CFF] to-[#7C3AED] hover:shadow-[0_0_20px_rgba(92,92,255,0.3)]",
+        "disabled:opacity-70",
         pending && "cursor-not-allowed"
       )}
       disabled={pending}
@@ -49,7 +51,10 @@ export default function ResetPasswordPage() {
   }, [state?.success, router]);
 
   return (
-    <div className="flex w-full max-w-[1200px] flex-col overflow-hidden rounded-[32px] bg-white shadow-premium lg:h-[760px] lg:flex-row">
+    <div className={cn(
+      "flex w-full max-w-[1200px] flex-col overflow-hidden rounded-[32px] lg:h-[760px] lg:flex-row",
+      "bg-[var(--sk-bg-card)] shadow-premium"
+    )}>
       {/* Left Column: Visual Panel */}
       <div className="relative flex min-h-[300px] flex-col justify-between p-10 lg:w-[42%] lg:p-12">
         <div className="absolute inset-0 z-0 bg-auth-gradient opacity-90" />
@@ -82,14 +87,17 @@ export default function ResetPasswordPage() {
           </div>
 
           {state?.success ? (
-            <div className="rounded-2xl border border-emerald-100 bg-emerald-50/50 p-8 text-center space-y-4">
+            <div className={cn(
+              "rounded-2xl border p-8 text-center space-y-4",
+              "border-[var(--sk-success-border)] bg-[var(--sk-success-bg)]"
+            )}>
               <div className="flex justify-center">
-                <CheckCircle2 className="h-12 w-12 text-emerald-500" />
+                <CheckCircle2 className="h-12 w-12 text-[var(--sk-success)]" />
               </div>
-              <p className="text-sm font-medium text-emerald-800 leading-relaxed">
+              <p className="text-sm font-medium text-[var(--sk-text-primary)] leading-relaxed">
                 {state.success}
               </p>
-              <p className="text-xs text-slate-400">Redirecionando você em alguns segundos...</p>
+              <p className="text-xs text-[var(--sk-text-muted)]">Redirecionando você em alguns segundos...</p>
             </div>
           ) : (
             <form action={formAction} className="space-y-5">
@@ -105,7 +113,12 @@ export default function ResetPasswordPage() {
                     placeholder="Mínimo 8 caracteres"
                     required
                     minLength={8}
-                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-[15px] text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-[#5C5CFF] focus:ring-4 focus:ring-[#5C5CFF]/5"
+                    className={cn(
+                      "w-full rounded-xl border px-4 py-3 text-[15px] outline-none transition-all",
+                      "border-slate-200 bg-white text-slate-900",
+                      "placeholder:text-slate-400",
+                      "focus:border-[#5C5CFF] focus:ring-4 focus:ring-[#5C5CFF]/5"
+                    )}
                   />
                 </div>
               </div>
@@ -121,7 +134,12 @@ export default function ResetPasswordPage() {
                     type={showPassword ? "text" : "password"}
                     placeholder="Repita a nova senha"
                     required
-                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-[15px] text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-[#5C5CFF] focus:ring-4 focus:ring-[#5C5CFF]/5"
+                    className={cn(
+                      "w-full rounded-xl border px-4 py-3 text-[15px] outline-none transition-all",
+                      "border-slate-200 bg-white text-slate-900",
+                      "placeholder:text-slate-400",
+                      "focus:border-[#5C5CFF] focus:ring-4 focus:ring-[#5C5CFF]/5"
+                    )}
                   />
                   <button
                     type="button"
