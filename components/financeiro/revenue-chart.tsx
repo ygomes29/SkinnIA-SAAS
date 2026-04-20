@@ -22,33 +22,40 @@ export function RevenueChart({ data }: { data: MetricDaily[] }) {
         <CardDescription>Visão rápida do caixa capturado por dia.</CardDescription>
       </CardHeader>
       <CardContent className="h-[320px]">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={chartData}>
-            <XAxis
-              axisLine={false}
-              dataKey="label"
-              tick={{ fill: "#94a3b8", fontSize: 12 }}
-              tickLine={false}
-            />
-            <YAxis
-              axisLine={false}
-              tick={{ fill: "#94a3b8", fontSize: 12 }}
-              tickFormatter={(value) => `R$ ${value}`}
-              tickLine={false}
-            />
-            <Tooltip
-              contentStyle={{
-                borderRadius: 18,
-                border: "1px solid rgba(124,58,237,0.20)",
-                background: "rgba(13,18,38,0.97)",
-                color: "#fff"
-              }}
-              formatter={(value: number, name: string) => [formatCurrency(value), name]}
-            />
-            <Bar dataKey="receita" fill="#7C3AED" radius={[12, 12, 4, 4]} />
-            <Bar dataKey="sinais" fill="#0EA5E9" radius={[12, 12, 4, 4]} />
-          </BarChart>
-        </ResponsiveContainer>
+        {chartData.length === 0 && (
+          <div className="flex h-full items-center justify-center">
+            <p className="text-sm text-slate-500">Sem dados de receita no período.</p>
+          </div>
+        )}
+        {chartData.length > 0 && (
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={chartData}>
+              <XAxis
+                axisLine={false}
+                dataKey="label"
+                tick={{ fill: "#94a3b8", fontSize: 12 }}
+                tickLine={false}
+              />
+              <YAxis
+                axisLine={false}
+                tick={{ fill: "#94a3b8", fontSize: 12 }}
+                tickFormatter={(value) => `R$ ${value}`}
+                tickLine={false}
+              />
+              <Tooltip
+                contentStyle={{
+                  borderRadius: 18,
+                  border: "1px solid rgba(124,58,237,0.20)",
+                  background: "rgba(13,18,38,0.97)",
+                  color: "#fff"
+                }}
+                formatter={(value: number, name: string) => [formatCurrency(value), name]}
+              />
+              <Bar dataKey="receita" fill="#7C3AED" radius={[12, 12, 4, 4]} />
+              <Bar dataKey="sinais" fill="#0EA5E9" radius={[12, 12, 4, 4]} />
+            </BarChart>
+          </ResponsiveContainer>
+        )}
       </CardContent>
     </Card>
   );

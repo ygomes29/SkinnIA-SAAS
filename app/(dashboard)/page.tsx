@@ -65,6 +65,11 @@ export default async function DashboardPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          {reactivationClients.length === 0 && (
+            <p className="col-span-4 py-4 text-sm text-slate-500">
+              Nenhum cliente na janela de reativação (25–35 dias sem atendimento).
+            </p>
+          )}
           {reactivationClients.slice(0, 4).map((client) => (
             <div
               className="rounded-3xl border border-violet-500/12 bg-[#0D1226]/60 p-4"

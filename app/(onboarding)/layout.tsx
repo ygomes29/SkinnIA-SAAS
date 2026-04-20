@@ -8,7 +8,8 @@ export default async function OnboardingLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = await createSupabaseServerClient();
+  const supabase = createSupabaseServerClient();
+  if (!supabase) redirect("/login");
 
   const {
     data: { user }

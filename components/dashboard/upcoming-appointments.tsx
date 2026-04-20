@@ -39,31 +39,45 @@ export function UpcomingAppointments({
     const client = createSupabaseBrowserClient();
     if (!client) return;
 
+    const today = new Date().toISOString().slice(0, 10);
+
+    function refetch() {
+      void client!
+        .from("appointments")
+        .select(`
+          id, organization_id, unit_id, professional_id, client_id, service_id,
+          start_at, end_at, price, status, payment_status, confirmation_status,
+          deposit_required, deposit_amount, source,
+          professionals ( name, avatar_url ),
+          clients ( name ),
+          services ( name, color )
+        `)
+        .gte("start_at", `${today}T00:00:00.000Z`)
+        .lte("start_at", `${today}T23:59:59.999Z`)
+        .order("start_at", { ascending: true })
+        .then(({ data }) => {
+          if (!data) return;
+          setAppointments(
+            data.map((row) => {
+              const prof = row.professionals as { name?: string; avatar_url?: string } | null;
+              const cl = row.clients as { name?: string } | null;
+              const svc = row.services as { name?: string; color?: string } | null;
+              return {
+                ...row,
+                professional_name: prof?.name ?? "Profissional",
+                professional_avatar: prof?.avatar_url ?? "",
+                client_name: cl?.name ?? "Cliente",
+                service_name: svc?.name ?? "Serviço",
+                service_color: svc?.color ?? "#EC4899"
+              } as Appointment;
+            })
+          );
+        });
+    }
+
     const channel = client
       .channel("appointments-live")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "appointments"
-        },
-        () => {
-          void client
-            .from("appointments")
-            .select(
-              "id, organization_id, professional_id, client_id, service_id, unit_id, start_at, end_at, price, status, payment_status, confirmation_status, deposit_required, deposit_amount, source"
-            )
-            .order("start_at", { ascending: true })
-            .then(({ data }) => {
-              if (!data?.length) return;
-
-              setAppointments((current) =>
-                data.map((row, index) => current[index] ?? current[0]).filter(Boolean)
-              );
-            });
-        }
-      )
+      .on("postgres_changes", { event: "*", schema: "public", table: "appointments" }, refetch)
       .subscribe();
 
     return () => {
@@ -83,6 +97,9 @@ export function UpcomingAppointments({
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
+        {appointments.length === 0 && (
+          <p className="py-6 text-center text-sm text-slate-500">Nenhum agendamento para hoje.</p>
+        )}
         {appointments.map((appointment) => (
           <div
             className="flex flex-col gap-4 rounded-3xl border border-white/10 bg-slate-950/30 p-4 md:flex-row md:items-center md:justify-between"

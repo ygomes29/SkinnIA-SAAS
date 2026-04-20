@@ -2,7 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 
-import { createSupabaseAdminClient, createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import type { OnboardingStep, OnboardingStatus } from "@/types/skinnia";
 
 interface OnboardingResult {
@@ -15,8 +16,10 @@ export async function saveOnboardingStep(
   status: OnboardingStatus,
   payload: Record<string, unknown>
 ): Promise<OnboardingResult> {
-  const supabase = await createSupabaseServerClient();
+  const supabase = createSupabaseServerClient();
   const admin = createSupabaseAdminClient();
+
+  if (!supabase || !admin) return { error: "Configuração ausente" };
 
   const {
     data: { user }
@@ -74,8 +77,10 @@ export async function getOnboardingStatus(): Promise<{
   };
   error?: string;
 }> {
-  const supabase = await createSupabaseServerClient();
+  const supabase = createSupabaseServerClient();
   const admin = createSupabaseAdminClient();
+
+  if (!supabase || !admin) return { error: "Configuração ausente" };
 
   const {
     data: { user }

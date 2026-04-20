@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Download, MessageCircleMore, PlusCircle, Search } from "lucide-react";
+import { Download, MessageCircleMore, Pencil, PlusCircle, Search, UserX } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,24 +14,46 @@ import { formatCurrency } from "@/lib/utils/currency";
 import { formatRelativeDate } from "@/lib/utils/date";
 import type { Appointment, Client, Professional } from "@/types/skinnia";
 
+type ClientDraft = {
+  name: string;
+  phone: string;
+  email: string;
+  birthdate: string;
+  notes: string;
+  tags: string;
+  preferred_professional_id: string;
+  status: "active" | "inactive" | "blocked";
+};
+
+const emptyDraft: ClientDraft = {
+  name: "",
+  phone: "",
+  email: "",
+  birthdate: "",
+  notes: "",
+  tags: "",
+  preferred_professional_id: "",
+  status: "active"
+};
+
 function favoriteProfessional(client: Client, appointments: Appointment[], professionals: Professional[]) {
   if (client.preferred_professional_id) {
-    return professionals.find((professional) => professional.id === client.preferred_professional_id)?.name;
+    return professionals.find((p) => p.id === client.preferred_professional_id)?.name;
   }
 
   const counter = new Map<string, number>();
   appointments
-    .filter((appointment) => appointment.client_id === client.id)
-    .forEach((appointment) => {
-      counter.set(appointment.professional_id, (counter.get(appointment.professional_id) ?? 0) + 1);
+    .filter((a) => a.client_id === client.id)
+    .forEach((a) => {
+      counter.set(a.professional_id, (counter.get(a.professional_id) ?? 0) + 1);
     });
 
-  const winner = [...counter.entries()].sort((left, right) => right[1] - left[1])[0]?.[0];
-  return professionals.find((professional) => professional.id === winner)?.name ?? "Sem preferência";
+  const winner = [...counter.entries()].sort((l, r) => r[1] - l[1])[0]?.[0];
+  return professionals.find((p) => p.id === winner)?.name ?? "Sem preferência";
 }
 
 export function ClientTable({
-  clients,
+  clients: initialClients,
   appointments,
   professionals
 }: {
@@ -39,90 +61,172 @@ export function ClientTable({
   appointments: Appointment[];
   professionals: Professional[];
 }) {
+  const [clients, setClients] = useState(initialClients);
   const { filteredClients, professionalId, query, setProfessionalId, setQuery, setStatus, setTag, status, tag } =
     useClients(clients);
+
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [formOpen, setFormOpen] = useState(false);
+  const [editing, setEditing] = useState<Client | null>(null);
+  const [draft, setDraft] = useState<ClientDraft>(emptyDraft);
+  const [saving, setSaving] = useState(false);
+  const [formError, setFormError] = useState("");
 
   const allTags = useMemo(
-    () => Array.from(new Set(clients.flatMap((client) => client.tags))).sort(),
+    () => Array.from(new Set(clients.flatMap((c) => c.tags))).sort(),
     [clients]
   );
+
+  function openCreate() {
+    setEditing(null);
+    setDraft(emptyDraft);
+    setFormError("");
+    setFormOpen(true);
+  }
+
+  function openEdit(client: Client) {
+    setEditing(client);
+    setDraft({
+      name: client.name,
+      phone: client.phone,
+      email: client.email ?? "",
+      birthdate: client.birthdate ?? "",
+      notes: client.notes ?? "",
+      tags: client.tags.join(", "),
+      preferred_professional_id: client.preferred_professional_id ?? "",
+      status: client.status
+    });
+    setFormError("");
+    setFormOpen(true);
+  }
+
+  function closeForm() {
+    setFormOpen(false);
+    setEditing(null);
+    setDraft(emptyDraft);
+    setFormError("");
+  }
+
+  function field(key: keyof ClientDraft) {
+    return (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
+      setDraft((prev) => ({ ...prev, [key]: e.target.value }));
+  }
+
+  async function save() {
+    if (!draft.name.trim()) { setFormError("Nome é obrigatório"); return; }
+    if (!draft.phone.trim()) { setFormError("Telefone é obrigatório"); return; }
+
+    setSaving(true);
+    setFormError("");
+
+    try {
+      const url = editing ? `/api/clients/${editing.id}` : "/api/clients";
+      const method = editing ? "PATCH" : "POST";
+      const tags = draft.tags.split(",").map((t) => t.trim()).filter(Boolean);
+
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: draft.name,
+          phone: draft.phone,
+          email: draft.email || null,
+          birthdate: draft.birthdate || null,
+          notes: draft.notes || null,
+          tags,
+          preferred_professional_id: draft.preferred_professional_id || null,
+          ...(editing ? { status: draft.status } : {})
+        })
+      });
+
+      const json = await res.json();
+      if (!res.ok) { setFormError(json.error ?? "Erro ao salvar"); return; }
+
+      if (editing) {
+        setClients((prev) => prev.map((c) => (c.id === editing.id ? { ...c, ...json } : c)));
+      } else {
+        setClients((prev) => [...prev, json]);
+      }
+      closeForm();
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function blockClient(client: Client) {
+    const res = await fetch(`/api/clients/${client.id}`, { method: "DELETE" });
+    if (res.ok) {
+      setClients((prev) => prev.map((c) => (c.id === client.id ? { ...c, status: "blocked" as const } : c)));
+    }
+  }
 
   function exportCsv() {
     const lines = [
       ["Nome", "Telefone", "Agendamentos", "LTV", "Último atendimento", "Status", "Tags"].join(","),
-      ...filteredClients.map((client) =>
-        [
-          client.name,
-          client.phone,
-          client.total_appointments,
-          client.ltv,
-          client.last_appointment_at ?? "",
-          client.status,
-          client.tags.join("|")
-        ]
-          .map((value) => `"${String(value).replaceAll('"', '""')}"`)
+      ...filteredClients.map((c) =>
+        [c.name, c.phone, c.total_appointments, c.ltv, c.last_appointment_at ?? "", c.status, c.tags.join("|")]
+          .map((v) => `"${String(v).replaceAll('"', '""')}"`)
           .join(",")
       )
     ];
 
     const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.download = "clientes-skinnia.csv";
-    anchor.click();
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "clientes-skinnia.csv";
+    a.click();
     URL.revokeObjectURL(url);
   }
 
   const clientAppointments = selectedClient
-    ? appointments.filter((appointment) => appointment.client_id === selectedClient.id)
+    ? appointments.filter((a) => a.client_id === selectedClient.id)
     : [];
 
-  const serviceFrequency = clientAppointments.reduce<Record<string, number>>((accumulator, appointment) => {
-    accumulator[appointment.service_name] = (accumulator[appointment.service_name] ?? 0) + 1;
-    return accumulator;
+  const serviceFrequency = clientAppointments.reduce<Record<string, number>>((acc, a) => {
+    acc[a.service_name] = (acc[a.service_name] ?? 0) + 1;
+    return acc;
   }, {});
 
   return (
     <>
       <Card>
         <CardContent className="space-y-4 p-6">
-          <div className="grid gap-4 lg:grid-cols-[1.3fr_repeat(3,minmax(0,0.6fr))_auto]">
+          <div className="grid gap-4 lg:grid-cols-[1.3fr_repeat(3,minmax(0,0.6fr))_auto_auto]">
             <label className="relative block">
               <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
               <Input
                 className="pl-10"
-                onChange={(event) => setQuery(event.target.value)}
+                onChange={(e) => setQuery(e.target.value)}
                 placeholder="Buscar por nome ou telefone"
                 value={query}
               />
             </label>
-            <Select onChange={(event) => setStatus(event.target.value)} value={status}>
+            <Select onChange={(e) => setStatus(e.target.value)} value={status}>
               <option value="all">Todos os status</option>
               <option value="active">Ativos</option>
               <option value="inactive">Inativos</option>
               <option value="blocked">Bloqueados</option>
             </Select>
-            <Select onChange={(event) => setTag(event.target.value)} value={tag}>
+            <Select onChange={(e) => setTag(e.target.value)} value={tag}>
               <option value="all">Todas as tags</option>
-              {allTags.map((item) => (
-                <option key={item} value={item}>
-                  {item}
-                </option>
+              {allTags.map((t) => (
+                <option key={t} value={t}>{t}</option>
               ))}
             </Select>
-            <Select onChange={(event) => setProfessionalId(event.target.value)} value={professionalId}>
+            <Select onChange={(e) => setProfessionalId(e.target.value)} value={professionalId}>
               <option value="all">Todos os profissionais</option>
-              {professionals.map((professional) => (
-                <option key={professional.id} value={professional.id}>
-                  {professional.name}
-                </option>
+              {professionals.map((p) => (
+                <option key={p.id} value={p.id}>{p.name}</option>
               ))}
             </Select>
             <Button onClick={exportCsv} variant="secondary">
               <Download className="mr-2 h-4 w-4" />
               Export CSV
+            </Button>
+            <Button onClick={openCreate}>
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Novo cliente
             </Button>
           </div>
 
@@ -160,11 +264,7 @@ export function ClientTable({
                     <td className="px-4 py-4">
                       <Badge
                         variant={
-                          client.status === "active"
-                            ? "success"
-                            : client.status === "inactive"
-                              ? "warning"
-                              : "danger"
+                          client.status === "active" ? "success" : client.status === "inactive" ? "warning" : "danger"
                         }
                       >
                         {client.status}
@@ -172,10 +272,8 @@ export function ClientTable({
                     </td>
                     <td className="px-4 py-4">
                       <div className="flex flex-wrap gap-2">
-                        {client.tags.map((item) => (
-                          <Badge key={item} variant="info">
-                            {item}
-                          </Badge>
+                        {client.tags.map((t) => (
+                          <Badge key={t} variant="info">{t}</Badge>
                         ))}
                       </div>
                     </td>
@@ -184,20 +282,110 @@ export function ClientTable({
                         <Button onClick={() => setSelectedClient(client)} size="sm" variant="secondary">
                           Ver perfil
                         </Button>
-                        <Button size="sm" variant="ghost">
-                          <MessageCircleMore className="mr-2 h-4 w-4" />
-                          Mensagem
+                        <Button onClick={() => openEdit(client)} size="sm" variant="ghost">
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button onClick={() => blockClient(client)} size="sm" variant="ghost">
+                          <MessageCircleMore className="h-4 w-4" />
                         </Button>
                       </div>
                     </td>
                   </tr>
                 ))}
+                {filteredClients.length === 0 && (
+                  <tr>
+                    <td className="px-4 py-8 text-center text-sm text-slate-500" colSpan={8}>
+                      Nenhum cliente encontrado.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
         </CardContent>
       </Card>
 
+      {/* Modal criar / editar cliente */}
+      <Modal
+        description={editing ? "Edite os dados da cliente." : "Preencha os dados para cadastrar uma nova cliente."}
+        onClose={closeForm}
+        open={formOpen}
+        title={editing ? "Editar cliente" : "Nova cliente"}
+      >
+        <div className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-1">
+              <label className="text-xs text-slate-400">Nome *</label>
+              <Input onChange={field("name")} placeholder="Nome completo" value={draft.name} />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-slate-400">Telefone / WhatsApp *</label>
+              <Input onChange={field("phone")} placeholder="(11) 99999-9999" value={draft.phone} />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-slate-400">E-mail</label>
+              <Input onChange={field("email")} placeholder="email@exemplo.com" type="email" value={draft.email} />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-slate-400">Data de nascimento</label>
+              <Input onChange={field("birthdate")} type="date" value={draft.birthdate} />
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-xs text-slate-400">Profissional preferida</label>
+            <Select onChange={field("preferred_professional_id")} value={draft.preferred_professional_id}>
+              <option value="">Sem preferência</option>
+              {professionals.map((p) => (
+                <option key={p.id} value={p.id}>{p.name}</option>
+              ))}
+            </Select>
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-xs text-slate-400">Tags (separadas por vírgula)</label>
+            <Input onChange={field("tags")} placeholder="vip, retorno, pele-sensível" value={draft.tags} />
+          </div>
+
+          {editing && (
+            <div className="space-y-1">
+              <label className="text-xs text-slate-400">Status</label>
+              <Select
+                onChange={(e) =>
+                  setDraft((prev) => ({ ...prev, status: e.target.value as ClientDraft["status"] }))
+                }
+                value={draft.status}
+              >
+                <option value="active">Ativo</option>
+                <option value="inactive">Inativo</option>
+                <option value="blocked">Bloqueado</option>
+              </Select>
+            </div>
+          )}
+
+          <div className="space-y-1">
+            <label className="text-xs text-slate-400">Observações</label>
+            <textarea
+              className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-[--sk-brand]"
+              onChange={field("notes")}
+              placeholder="Alergias, preferências, histórico relevante..."
+              rows={3}
+              value={draft.notes}
+            />
+          </div>
+
+          {formError && <p className="text-sm text-red-400">{formError}</p>}
+
+          <div className="flex justify-end gap-3">
+            <Button onClick={closeForm} variant="secondary">Cancelar</Button>
+            <Button disabled={saving} onClick={save}>
+              {saving ? "Salvando..." : editing ? "Salvar alterações" : "Cadastrar cliente"}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Modal perfil da cliente */}
       <Modal
         align="right"
         description="Histórico, preferências e atalhos de ação para relacionamento."
@@ -210,14 +398,15 @@ export function ClientTable({
           <div className="space-y-5">
             <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-4">
               <p className="text-sm text-slate-400">{selectedClient.phone}</p>
+              {selectedClient.email && (
+                <p className="mt-1 text-sm text-slate-400">{selectedClient.email}</p>
+              )}
               <p className="mt-3 text-sm text-slate-300">
                 Último atendimento {formatRelativeDate(selectedClient.last_appointment_at)}
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
-                {selectedClient.tags.map((item) => (
-                  <Badge key={item} variant="pink">
-                    {item}
-                  </Badge>
+                {selectedClient.tags.map((t) => (
+                  <Badge key={t} variant="pink">{t}</Badge>
                 ))}
               </div>
             </div>
@@ -225,9 +414,7 @@ export function ClientTable({
             <div className="grid gap-3 sm:grid-cols-2">
               <Card className="p-4">
                 <p className="text-sm text-slate-400">Histórico de agendamentos</p>
-                <p className="mt-2 text-3xl font-semibold text-white">
-                  {selectedClient.total_appointments}
-                </p>
+                <p className="mt-2 text-3xl font-semibold text-white">{selectedClient.total_appointments}</p>
               </Card>
               <Card className="p-4">
                 <p className="text-sm text-slate-400">Créditos em carteira</p>
@@ -244,43 +431,52 @@ export function ClientTable({
                     <span className="text-sm text-slate-400">{total}x</span>
                   </div>
                 ))}
-                {Object.keys(serviceFrequency).length === 0 ? (
+                {Object.keys(serviceFrequency).length === 0 && (
                   <p className="text-sm text-slate-500">Sem histórico suficiente.</p>
-                ) : null}
+                )}
               </div>
             </div>
 
             <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-4">
               <p className="text-sm font-medium text-white">Histórico completo</p>
               <div className="mt-3 space-y-3">
-                {clientAppointments.map((appointment) => (
-                  <div className="rounded-2xl border border-white/10 bg-slate-950/40 p-3" key={appointment.id}>
-                    <p className="font-medium text-white">{appointment.service_name}</p>
+                {clientAppointments.map((a) => (
+                  <div className="rounded-2xl border border-white/10 bg-slate-950/40 p-3" key={a.id}>
+                    <p className="font-medium text-white">{a.service_name}</p>
                     <p className="text-sm text-slate-400">
-                      {formatRelativeDate(appointment.start_at)} • {appointment.professional_name}
+                      {formatRelativeDate(a.start_at)} • {a.professional_name}
                     </p>
                   </div>
                 ))}
-                {clientAppointments.length === 0 ? (
-                  <p className="text-sm text-slate-500">Nenhum agendamento recente encontrado.</p>
-                ) : null}
+                {clientAppointments.length === 0 && (
+                  <p className="text-sm text-slate-500">Nenhum agendamento encontrado.</p>
+                )}
               </div>
             </div>
 
-            <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-4">
-              <p className="text-sm font-medium text-white">Resumo de conversas</p>
-              <p className="mt-2 text-sm text-slate-400">
-                Preferência por confirmação via WhatsApp, responde melhor no período da tarde e já
-                aceitou cobrança por Pix.
-              </p>
-            </div>
+            {selectedClient.notes && (
+              <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-4">
+                <p className="text-sm font-medium text-white">Observações</p>
+                <p className="mt-2 text-sm text-slate-400">{selectedClient.notes}</p>
+              </div>
+            )}
 
             <div className="flex flex-wrap gap-3">
-              <Button>
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Agendar agora
+              <Button onClick={() => { setSelectedClient(null); openEdit(selectedClient); }}>
+                <Pencil className="mr-2 h-4 w-4" />
+                Editar cliente
               </Button>
-              <Button variant="secondary">Enviar campanha de retorno</Button>
+              <Button variant="secondary">
+                <MessageCircleMore className="mr-2 h-4 w-4" />
+                Enviar mensagem
+              </Button>
+              <Button
+                onClick={() => { blockClient(selectedClient); setSelectedClient(null); }}
+                variant="ghost"
+              >
+                <UserX className="mr-2 h-4 w-4" />
+                Bloquear
+              </Button>
             </div>
           </div>
         ) : null}

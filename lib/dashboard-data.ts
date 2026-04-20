@@ -1,89 +1,99 @@
 import { subDays } from "date-fns";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import {
-  mockAppointments,
-  mockAutomationRuns,
-  mockClients,
-  mockMetrics,
-  mockProfessionals,
-  mockServices
-} from "@/lib/mock-data";
-import type { AgentConfig, Appointment, AutomationRun, Client, MetricDaily, Organization, Professional, Service } from "@/types/skinnia";
+import type {
+  AgentConfig,
+  Appointment,
+  AutomationRun,
+  Client,
+  MetricDaily,
+  Organization,
+  Professional,
+  Service
+} from "@/types/skinnia";
 
 function todayIsoDate() {
   return new Date().toISOString().slice(0, 10);
 }
 
-export async function getMetricsSummary() {
-  const supabase = createSupabaseServerClient();
+// ─── Helpers ────────────────────────────────────────────────────────────────
 
-  if (!supabase) {
-    return mockMetrics.at(-1) ?? null;
-  }
+type AppointmentRow = {
+  status: string;
+  price: number | null;
+  payment_status: string | null;
+  deposit_required: boolean | null;
+  deposit_amount: number | null;
+  start_at: string;
+};
 
-  const { data, error } = await supabase
-    .from("metrics_daily")
-    .select("*")
-    .eq("date", todayIsoDate())
-    .order("date", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  if (error || !data) {
-    return mockMetrics.at(-1) ?? null;
-  }
-
+function aggregateToMetric(date: string, rows: AppointmentRow[]): MetricDaily {
   return {
-    ...data,
-    appointments_total: data.appointments_total ?? 0,
-    appointments_confirmed: data.appointments_confirmed ?? 0,
-    appointments_cancelled: data.appointments_cancelled ?? 0,
-    appointments_no_show: data.appointments_no_show ?? 0,
-    appointments_completed: data.appointments_completed ?? 0,
-    revenue_total: Number(data.revenue_total ?? 0),
-    revenue_deposits: Number(data.revenue_deposits ?? 0),
-    revenue_lost_no_show: Number(data.revenue_lost_no_show ?? 0),
-    new_clients: data.new_clients ?? 0,
-    returning_clients: data.returning_clients ?? 0
-  } satisfies MetricDaily;
+    id: `computed-${date}`,
+    organization_id: "",
+    date,
+    appointments_total: rows.length,
+    appointments_confirmed: rows.filter((r) => r.status === "confirmed").length,
+    appointments_cancelled: rows.filter((r) => r.status === "cancelled").length,
+    appointments_no_show: rows.filter((r) => r.status === "no_show").length,
+    appointments_completed: rows.filter((r) => r.status === "completed").length,
+    revenue_total: rows
+      .filter((r) => r.payment_status === "paid")
+      .reduce((s, r) => s + Number(r.price ?? 0), 0),
+    revenue_deposits: rows
+      .filter((r) => r.deposit_required && r.deposit_amount)
+      .reduce((s, r) => s + Number(r.deposit_amount ?? 0), 0),
+    revenue_lost_no_show: rows
+      .filter((r) => r.status === "no_show")
+      .reduce((s, r) => s + Number(r.price ?? 0), 0),
+    new_clients: 0,
+    returning_clients: 0
+  };
 }
 
-export async function getRevenueSeries(days = 7) {
-  const supabase = createSupabaseServerClient();
-  const minDate = subDays(new Date(), days - 1).toISOString().slice(0, 10);
-
-  if (!supabase) {
-    return mockMetrics.slice(-days);
-  }
-
+async function computeDailyMetrics(
+  supabase: NonNullable<ReturnType<typeof createSupabaseServerClient>>,
+  date: string
+): Promise<MetricDaily | null> {
   const { data, error } = await supabase
-    .from("metrics_daily")
-    .select("*")
-    .gte("date", minDate)
-    .order("date", { ascending: true });
+    .from("appointments")
+    .select("status, price, payment_status, deposit_required, deposit_amount, start_at")
+    .gte("start_at", `${date}T00:00:00.000Z`)
+    .lte("start_at", `${date}T23:59:59.999Z`);
 
-  if (error || !data || data.length === 0) {
-    return mockMetrics.slice(-days);
-  }
-
-  return data.map((row) => ({
-    ...row,
-    appointments_total: row.appointments_total ?? 0,
-    appointments_confirmed: row.appointments_confirmed ?? 0,
-    appointments_cancelled: row.appointments_cancelled ?? 0,
-    appointments_no_show: row.appointments_no_show ?? 0,
-    appointments_completed: row.appointments_completed ?? 0,
-    revenue_total: Number(row.revenue_total ?? 0),
-    revenue_deposits: Number(row.revenue_deposits ?? 0),
-    revenue_lost_no_show: Number(row.revenue_lost_no_show ?? 0),
-    new_clients: row.new_clients ?? 0,
-    returning_clients: row.returning_clients ?? 0
-  })) as MetricDaily[];
+  if (error || !data || data.length === 0) return null;
+  return aggregateToMetric(date, data as AppointmentRow[]);
 }
 
-// Single query with joins — no mock enrichment
-async function fetchAppointmentsWithJoins(supabase: NonNullable<ReturnType<typeof createSupabaseServerClient>>, filter: Record<string, unknown> = {}) {
+async function computeSeriesFromAppointments(
+  supabase: NonNullable<ReturnType<typeof createSupabaseServerClient>>,
+  minDate: string
+): Promise<MetricDaily[]> {
+  const { data, error } = await supabase
+    .from("appointments")
+    .select("status, price, payment_status, deposit_required, deposit_amount, start_at")
+    .gte("start_at", `${minDate}T00:00:00.000Z`);
+
+  if (error || !data || data.length === 0) return [];
+
+  const byDate = new Map<string, AppointmentRow[]>();
+  for (const row of data as AppointmentRow[]) {
+    const date = row.start_at.slice(0, 10);
+    if (!byDate.has(date)) byDate.set(date, []);
+    byDate.get(date)!.push(row);
+  }
+
+  return Array.from(byDate.entries())
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([date, rows]) => aggregateToMetric(date, rows));
+}
+
+// ─── Joins para appointments ─────────────────────────────────────────────────
+
+async function fetchAppointmentsWithJoins(
+  supabase: NonNullable<ReturnType<typeof createSupabaseServerClient>>,
+  filter: { gte_start?: string; lte_start?: string; limit?: number } = {}
+) {
   let query = supabase
     .from("appointments")
     .select(`
@@ -95,9 +105,9 @@ async function fetchAppointmentsWithJoins(supabase: NonNullable<ReturnType<typeo
       services ( name, color, duration_minutes )
     `);
 
-  if (filter.gte_start) query = query.gte("start_at", filter.gte_start as string);
-  if (filter.lte_start) query = query.lte("start_at", filter.lte_start as string);
-  if (filter.limit) query = query.limit(filter.limit as number);
+  if (filter.gte_start) query = query.gte("start_at", filter.gte_start);
+  if (filter.lte_start) query = query.lte("start_at", filter.lte_start);
+  if (filter.limit) query = query.limit(filter.limit);
 
   return query.order("start_at", { ascending: true });
 }
@@ -117,8 +127,8 @@ function mapAppointmentRow(item: Record<string, unknown>): Appointment {
     professional_name: prof?.name ?? "Profissional",
     professional_avatar: prof?.avatar_url ?? "",
     client_name: client?.name ?? "Cliente",
-    service_name: svc?.name as string ?? "Serviço",
-    service_color: svc?.color as string ?? "#EC4899",
+    service_name: (svc?.name as string) ?? "Serviço",
+    service_color: (svc?.color as string) ?? "#EC4899",
     start_at: item.start_at as string,
     end_at: item.end_at as string,
     price: Number(item.price),
@@ -127,48 +137,104 @@ function mapAppointmentRow(item: Record<string, unknown>): Appointment {
     confirmation_status: (item.confirmation_status ?? "pending") as Appointment["confirmation_status"],
     deposit_required: Boolean(item.deposit_required),
     deposit_amount: item.deposit_amount ? Number(item.deposit_amount) : null,
-    source: (item.source ?? "panel") as Appointment["source"],
+    source: (item.source ?? "panel") as Appointment["source"]
   };
+}
+
+// ─── Exports ─────────────────────────────────────────────────────────────────
+
+export async function getMetricsSummary(): Promise<MetricDaily | null> {
+  const supabase = createSupabaseServerClient();
+  if (!supabase) return null;
+
+  const today = todayIsoDate();
+
+  const { data, error } = await supabase
+    .from("metrics_daily")
+    .select("*")
+    .eq("date", today)
+    .order("date", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (!error && data) {
+    return {
+      ...data,
+      appointments_total: data.appointments_total ?? 0,
+      appointments_confirmed: data.appointments_confirmed ?? 0,
+      appointments_cancelled: data.appointments_cancelled ?? 0,
+      appointments_no_show: data.appointments_no_show ?? 0,
+      appointments_completed: data.appointments_completed ?? 0,
+      revenue_total: Number(data.revenue_total ?? 0),
+      revenue_deposits: Number(data.revenue_deposits ?? 0),
+      revenue_lost_no_show: Number(data.revenue_lost_no_show ?? 0),
+      new_clients: data.new_clients ?? 0,
+      returning_clients: data.returning_clients ?? 0
+    } satisfies MetricDaily;
+  }
+
+  // metrics_daily vazia — computa dos agendamentos de hoje
+  return computeDailyMetrics(supabase, today);
+}
+
+export async function getRevenueSeries(days = 7): Promise<MetricDaily[]> {
+  const supabase = createSupabaseServerClient();
+  if (!supabase) return [];
+
+  const minDate = subDays(new Date(), days - 1).toISOString().slice(0, 10);
+
+  const { data, error } = await supabase
+    .from("metrics_daily")
+    .select("*")
+    .gte("date", minDate)
+    .order("date", { ascending: true });
+
+  if (!error && data && data.length > 0) {
+    return data.map((row) => ({
+      ...row,
+      appointments_total: row.appointments_total ?? 0,
+      appointments_confirmed: row.appointments_confirmed ?? 0,
+      appointments_cancelled: row.appointments_cancelled ?? 0,
+      appointments_no_show: row.appointments_no_show ?? 0,
+      appointments_completed: row.appointments_completed ?? 0,
+      revenue_total: Number(row.revenue_total ?? 0),
+      revenue_deposits: Number(row.revenue_deposits ?? 0),
+      revenue_lost_no_show: Number(row.revenue_lost_no_show ?? 0),
+      new_clients: row.new_clients ?? 0,
+      returning_clients: row.returning_clients ?? 0
+    })) as MetricDaily[];
+  }
+
+  // metrics_daily vazia — computa dos agendamentos no período
+  return computeSeriesFromAppointments(supabase, minDate);
 }
 
 export async function getTodayAppointments(): Promise<Appointment[]> {
   const supabase = createSupabaseServerClient();
+  if (!supabase) return [];
 
-  if (!supabase) return mockAppointments;
-
-  const start = `${todayIsoDate()}T00:00:00.000Z`;
-  const end = `${todayIsoDate()}T23:59:59.999Z`;
-
+  const today = todayIsoDate();
   const { data, error } = await fetchAppointmentsWithJoins(supabase, {
-    gte_start: start,
-    lte_start: end,
+    gte_start: `${today}T00:00:00.000Z`,
+    lte_start: `${today}T23:59:59.999Z`
   });
 
-  if (error || !data) return mockAppointments;
-  if (data.length === 0) return [];
-
+  if (error || !data) return [];
   return data.map((item) => mapAppointmentRow(item as Record<string, unknown>));
 }
 
 export async function getAppointments(limit = 100): Promise<Appointment[]> {
   const supabase = createSupabaseServerClient();
-
-  if (!supabase) return mockAppointments.slice(0, limit);
+  if (!supabase) return [];
 
   const { data, error } = await fetchAppointmentsWithJoins(supabase, { limit });
-
-  if (error || !data) return mockAppointments.slice(0, limit);
-  if (data.length === 0) return [];
-
+  if (error || !data) return [];
   return data.map((item) => mapAppointmentRow(item as Record<string, unknown>));
 }
 
 export async function getReactivationCandidates(): Promise<Client[]> {
   const supabase = createSupabaseServerClient();
-
-  if (!supabase) {
-    return mockClients.filter((client) => client.last_appointment_at);
-  }
+  if (!supabase) return [];
 
   const cutoffStart = subDays(new Date(), 35).toISOString();
   const cutoffEnd = subDays(new Date(), 25).toISOString();
@@ -181,26 +247,21 @@ export async function getReactivationCandidates(): Promise<Client[]> {
     .order("last_appointment_at", { ascending: true })
     .limit(8);
 
-  if (error || !data) {
-    return mockClients.filter((client) => client.last_appointment_at);
-  }
+  if (error || !data) return [];
 
-  if (data.length === 0) return [];
-
-  return data.map((client) => ({
-    ...client,
-    tags: client.tags ?? [],
-    total_appointments: client.total_appointments ?? 0,
-    total_spent: Number(client.total_spent ?? 0),
-    ltv: Number(client.ltv ?? 0),
-    status: client.status ?? "active"
+  return data.map((c) => ({
+    ...c,
+    tags: c.tags ?? [],
+    total_appointments: c.total_appointments ?? 0,
+    total_spent: Number(c.total_spent ?? 0),
+    ltv: Number(c.ltv ?? 0),
+    status: c.status ?? "active"
   })) as Client[];
 }
 
 export async function getClients(): Promise<Client[]> {
   const supabase = createSupabaseServerClient();
-
-  if (!supabase) return mockClients;
+  if (!supabase) return [];
 
   const { data, error } = await supabase
     .from("clients")
@@ -208,23 +269,21 @@ export async function getClients(): Promise<Client[]> {
     .order("created_at", { ascending: false })
     .limit(100);
 
-  if (error || !data) return mockClients;
-  if (data.length === 0) return [];
+  if (error || !data) return [];
 
-  return data.map((client) => ({
-    ...client,
-    tags: client.tags ?? [],
-    total_appointments: client.total_appointments ?? 0,
-    total_spent: Number(client.total_spent ?? 0),
-    ltv: Number(client.ltv ?? 0),
-    status: client.status ?? "active"
+  return data.map((c) => ({
+    ...c,
+    tags: c.tags ?? [],
+    total_appointments: c.total_appointments ?? 0,
+    total_spent: Number(c.total_spent ?? 0),
+    ltv: Number(c.ltv ?? 0),
+    status: c.status ?? "active"
   })) as Client[];
 }
 
 export async function getAutomationRuns(): Promise<AutomationRun[]> {
   const supabase = createSupabaseServerClient();
-
-  if (!supabase) return mockAutomationRuns;
+  if (!supabase) return [];
 
   const { data, error } = await supabase
     .from("automation_runs")
@@ -232,8 +291,7 @@ export async function getAutomationRuns(): Promise<AutomationRun[]> {
     .order("created_at", { ascending: false })
     .limit(20);
 
-  if (error || !data) return mockAutomationRuns;
-  if (data.length === 0) return [];
+  if (error || !data) return [];
 
   return data.map((row) => ({
     ...row,
@@ -244,8 +302,7 @@ export async function getAutomationRuns(): Promise<AutomationRun[]> {
 
 export async function getProfessionals(): Promise<Professional[]> {
   const supabase = createSupabaseServerClient();
-
-  if (!supabase) return mockProfessionals;
+  if (!supabase) return [];
 
   const { data, error } = await supabase
     .from("professionals")
@@ -253,8 +310,7 @@ export async function getProfessionals(): Promise<Professional[]> {
     .eq("is_active", true)
     .order("name", { ascending: true });
 
-  if (error || !data) return mockProfessionals;
-  if (data.length === 0) return [];
+  if (error || !data) return [];
 
   return data.map((row) => ({
     ...row,
@@ -268,7 +324,9 @@ export async function getOrganization(): Promise<Organization | null> {
   const supabase = createSupabaseServerClient();
   if (!supabase) return null;
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user }
+  } = await supabase.auth.getUser();
   if (!user) return null;
 
   const { data: ou } = await supabase
@@ -293,7 +351,9 @@ export async function getAgentConfigs(): Promise<AgentConfig[]> {
   const supabase = createSupabaseServerClient();
   if (!supabase) return [];
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user }
+  } = await supabase.auth.getUser();
   if (!user) return [];
 
   const { data: ou } = await supabase
@@ -314,11 +374,15 @@ export async function getAgentConfigs(): Promise<AgentConfig[]> {
   return data as AgentConfig[];
 }
 
-export async function getMessageTemplates() {
+export async function getMessageTemplates(): Promise<
+  { id: string; key: string; title: string; body: string; variables: string[] }[]
+> {
   const supabase = createSupabaseServerClient();
   if (!supabase) return [];
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user }
+  } = await supabase.auth.getUser();
   if (!user) return [];
 
   const { data: ou } = await supabase
@@ -341,8 +405,7 @@ export async function getMessageTemplates() {
 
 export async function getServices(): Promise<Service[]> {
   const supabase = createSupabaseServerClient();
-
-  if (!supabase) return mockServices;
+  if (!supabase) return [];
 
   const { data, error } = await supabase
     .from("services")
@@ -350,8 +413,7 @@ export async function getServices(): Promise<Service[]> {
     .eq("is_active", true)
     .order("name", { ascending: true });
 
-  if (error || !data) return mockServices;
-  if (data.length === 0) return [];
+  if (error || !data) return [];
 
   return data.map((row) => ({
     ...row,
