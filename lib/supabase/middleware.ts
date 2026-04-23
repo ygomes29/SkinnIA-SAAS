@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
-const publicRoutes = new Set(["/login", "/cadastro", "/esqueci-senha", "/redefinir-senha", "/onboarding"]);
+const publicRoutes = new Set(["/login", "/cadastro", "/esqueci-senha", "/redefinir-senha", "/onboarding", "/auth/callback"]);
 
 export async function updateSession(request: NextRequest) {
   const response = NextResponse.next({
@@ -12,6 +12,10 @@ export async function updateSession(request: NextRequest) {
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!url || !key) {
+    // Sem env vars configuradas: protege todas as rotas não-públicas
+    if (!publicRoutes.has(request.nextUrl.pathname)) {
+      return NextResponse.redirect(new URL("/login", request.url));
+    }
     return response;
   }
 

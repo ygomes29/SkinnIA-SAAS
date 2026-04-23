@@ -132,8 +132,9 @@ export async function forgotPasswordAction(_prevState: AuthState, formData: Form
   }
 
   const supabase = createActionClient();
+  const siteUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:4000"}/redefinir-senha`,
+    redirectTo: `${siteUrl}/auth/callback?next=/redefinir-senha`,
   });
 
   if (error) {
