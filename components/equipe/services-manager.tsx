@@ -133,11 +133,11 @@ export function ServicesManager({ initial }: { initial: Service[] }) {
         </CardHeader>
         <CardContent className="space-y-3">
           {services.length === 0 ? (
-            <p className="text-sm text-slate-500">Nenhum serviço cadastrado.</p>
+            <p className="text-sm text-[var(--sk-text-muted)]">Nenhum serviço cadastrado.</p>
           ) : (
             services.map((s) => (
               <div
-                className="flex items-center justify-between rounded-3xl border border-white/10 bg-slate-950/40 p-4"
+                className="flex items-center justify-between rounded-3xl border border-[var(--sk-border)] bg-[var(--sk-bg-soft)] p-4"
                 key={s.id}
               >
                 <div className="flex items-center gap-3">
@@ -146,19 +146,19 @@ export function ServicesManager({ initial }: { initial: Service[] }) {
                     style={{ backgroundColor: s.color ?? "#EC4899" }}
                   />
                   <div>
-                    <p className="font-semibold text-white">{s.name}</p>
-                    <p className="text-sm text-slate-400">{s.duration_minutes} min</p>
+                    <p className="font-semibold text-[var(--sk-text-primary)]">{s.name}</p>
+                    <p className="text-sm text-[var(--sk-text-muted)]">{s.duration_minutes} min</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="text-right">
-                    <p className="font-semibold text-white">{formatCurrency(s.price)}</p>
-                    <p className="text-xs text-slate-400">
+                    <p className="font-semibold text-[var(--sk-text-primary)]">{formatCurrency(s.price)}</p>
+                    <p className="text-xs text-[var(--sk-text-muted)]">
                       {s.deposit_required ? `Sinal ${formatCurrency(s.deposit_amount ?? 0)}` : "Confirmação direta"}
                     </p>
                   </div>
                   <button
-                    className="rounded-xl border border-white/10 p-2 text-slate-400 transition hover:bg-white/5 hover:text-white"
+                    className="rounded-xl border border-[var(--sk-border)] p-2 text-[var(--sk-text-muted)] transition hover:bg-[var(--sk-bg-hover)] hover:text-[var(--sk-text-primary)]"
                     onClick={() => openEdit(s)}
                     title="Editar"
                     type="button"
@@ -166,7 +166,7 @@ export function ServicesManager({ initial }: { initial: Service[] }) {
                     <Pencil className="h-4 w-4" />
                   </button>
                   <button
-                    className="rounded-xl border border-white/10 p-2 text-slate-400 transition hover:bg-red-500/10 hover:text-red-400"
+                    className="rounded-xl border border-[var(--sk-border)] p-2 text-[var(--sk-text-muted)] transition hover:bg-red-500/10 hover:text-red-400"
                     onClick={() => deactivate(s)}
                     title="Desativar"
                     type="button"
@@ -188,7 +188,7 @@ export function ServicesManager({ initial }: { initial: Service[] }) {
       >
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2 sm:col-span-2">
-            <label className="text-sm text-slate-300">Nome *</label>
+            <label className="text-sm text-[var(--sk-text-secondary)]">Nome *</label>
             <Input
               onChange={(e) => setDraft((d) => ({ ...d, name: e.target.value }))}
               placeholder="Ex: Lash Lifting"
@@ -196,7 +196,7 @@ export function ServicesManager({ initial }: { initial: Service[] }) {
             />
           </div>
           <div className="space-y-2">
-            <label className="text-sm text-slate-300">Categoria</label>
+            <label className="text-sm text-[var(--sk-text-secondary)]">Categoria</label>
             <Input
               onChange={(e) => setDraft((d) => ({ ...d, category: e.target.value }))}
               placeholder="Ex: lash, cabelo"
@@ -204,7 +204,7 @@ export function ServicesManager({ initial }: { initial: Service[] }) {
             />
           </div>
           <div className="space-y-2">
-            <label className="text-sm text-slate-300">Duração (min) *</label>
+            <label className="text-sm text-[var(--sk-text-secondary)]">Duração (min) *</label>
             <Input
               min="5"
               onChange={(e) => setDraft((d) => ({ ...d, duration_minutes: e.target.value }))}
@@ -213,7 +213,7 @@ export function ServicesManager({ initial }: { initial: Service[] }) {
             />
           </div>
           <div className="space-y-2">
-            <label className="text-sm text-slate-300">Preço (R$) *</label>
+            <label className="text-sm text-[var(--sk-text-secondary)]">Preço (R$) *</label>
             <Input
               min="0"
               onChange={(e) => setDraft((d) => ({ ...d, price: e.target.value }))}
@@ -224,7 +224,7 @@ export function ServicesManager({ initial }: { initial: Service[] }) {
             />
           </div>
           <div className="space-y-2">
-            <label className="text-sm text-slate-300">Cor</label>
+            <label className="text-sm text-[var(--sk-text-secondary)]">Cor</label>
             <div className="flex gap-2">
               {COLORS.map((c) => (
                 <button
@@ -242,10 +242,10 @@ export function ServicesManager({ initial }: { initial: Service[] }) {
           </div>
 
           <div className="space-y-3 sm:col-span-2">
-            <label className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-slate-300">
+            <label className="flex items-center gap-3 rounded-2xl border border-[var(--sk-border)] bg-[var(--sk-bg-soft)] px-4 py-3 text-sm text-[var(--sk-text-secondary)]">
               <input
                 checked={draft.deposit_required}
-                className="h-4 w-4 rounded border-white/10 bg-slate-950"
+                className="h-4 w-4 rounded border-[var(--sk-border)] bg-[var(--sk-bg-input)]"
                 onChange={(e) => setDraft((d) => ({ ...d, deposit_required: e.target.checked }))}
                 type="checkbox"
               />
@@ -253,7 +253,7 @@ export function ServicesManager({ initial }: { initial: Service[] }) {
             </label>
             {draft.deposit_required ? (
               <div className="space-y-2">
-                <label className="text-sm text-slate-300">Valor do sinal (R$)</label>
+                <label className="text-sm text-[var(--sk-text-secondary)]">Valor do sinal (R$)</label>
                 <Input
                   min="0"
                   onChange={(e) => setDraft((d) => ({ ...d, deposit_amount: e.target.value }))}

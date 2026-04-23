@@ -39,7 +39,7 @@ export function Stepper({ steps, currentStep }: StepperProps) {
                     ? "bg-brand-violet text-white"
                     : isCurrent
                       ? "bg-brand-violet/20 text-brand-violet ring-2 ring-brand-violet"
-                      : "bg-white/5 text-[--sk-text-muted]"
+                      : "bg-[var(--sk-bg-soft)] text-[--sk-text-muted]"
                 )}
               >
                 {isCompleted ? (
@@ -62,7 +62,7 @@ export function Stepper({ steps, currentStep }: StepperProps) {
                   <p
                     className={cn(
                       "text-sm font-medium",
-                      isCurrent ? "text-white" : "text-[--sk-text-muted]"
+                      isCurrent ? "text-[var(--sk-text-primary)]" : "text-[--sk-text-muted]"
                     )}
                   >
                     {stepLabels[step.step].label}
@@ -75,7 +75,7 @@ export function Stepper({ steps, currentStep }: StepperProps) {
                 <div
                   className={cn(
                     "ml-4 mr-4 h-0.5 w-12 transition-colors",
-                    isCompleted ? "bg-brand-violet" : "bg-white/10"
+                    isCompleted ? "bg-brand-violet" : "bg-[var(--sk-border)]"
                   )}
                 />
               )}
@@ -92,7 +92,7 @@ export function StepHeader({ step }: { step: OnboardingStep }) {
 
   return (
     <div className="mb-8">
-      <h2 className="text-2xl font-semibold text-white">{label}</h2>
+      <h2 className="text-2xl font-semibold text-[var(--sk-text-primary)]">{label}</h2>
       <p className="mt-2 text-[--sk-text-secondary]">{description}</p>
     </div>
   );

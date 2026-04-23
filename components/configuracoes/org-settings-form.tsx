@@ -30,19 +30,19 @@ export function OrgSettingsForm({ org }: { org: Organization | null }) {
       <CardContent>
         <form action={action} className="space-y-4">
           <div className="space-y-2">
-            <label className="text-sm text-slate-300">Nome do estúdio</label>
+            <label className="text-sm text-[var(--sk-text-secondary)]">Nome do estúdio</label>
             <Input defaultValue={org?.name ?? ""} name="name" placeholder="Ex: Studio Lumi" />
           </div>
           <div className="space-y-2">
-            <label className="text-sm text-slate-300">Cidade</label>
+            <label className="text-sm text-[var(--sk-text-secondary)]">Cidade</label>
             <Input defaultValue={settings.city ?? ""} name="city" placeholder="Ex: Belo Horizonte" />
           </div>
           <div className="space-y-2">
-            <label className="text-sm text-slate-300">Tipo de negócio</label>
+            <label className="text-sm text-[var(--sk-text-secondary)]">Tipo de negócio</label>
             <Input defaultValue={settings.org_type ?? ""} name="org_type" placeholder="Ex: studio, salão, clínica" />
           </div>
           <div className="space-y-2">
-            <label className="text-sm text-slate-300">Timezone</label>
+            <label className="text-sm text-[var(--sk-text-secondary)]">Timezone</label>
             <Input defaultValue={org?.timezone ?? "America/Sao_Paulo"} name="timezone" placeholder="America/Sao_Paulo" />
           </div>
 

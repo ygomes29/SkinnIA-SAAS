@@ -31,11 +31,11 @@ export function AgentSettingsForm({ agent }: { agent: AgentConfig | null }) {
       <CardContent>
         <form action={action} className="space-y-4">
           <div className="space-y-2">
-            <label className="text-sm text-slate-300">Nome do agente</label>
+            <label className="text-sm text-[var(--sk-text-secondary)]">Nome do agente</label>
             <Input defaultValue={agent?.name ?? "Luna"} name="agent_name" placeholder="Ex: Luna" />
           </div>
           <div className="space-y-2">
-            <label className="text-sm text-slate-300">Tom de voz</label>
+            <label className="text-sm text-[var(--sk-text-secondary)]">Tom de voz</label>
             <Input
               defaultValue={agent?.tone ?? ""}
               name="tone"
@@ -43,7 +43,7 @@ export function AgentSettingsForm({ agent }: { agent: AgentConfig | null }) {
             />
           </div>
           <div className="space-y-2">
-            <label className="text-sm text-slate-300">Prompt-base</label>
+            <label className="text-sm text-[var(--sk-text-secondary)]">Prompt-base</label>
             <Textarea
               defaultValue={overrides.prompt_base ?? "Sempre responda em português brasileiro informal, sem inventar disponibilidade e oferecendo atendimento humano quando necessário."}
               name="prompt_base"

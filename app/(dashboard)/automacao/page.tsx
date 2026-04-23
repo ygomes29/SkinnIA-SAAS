@@ -31,7 +31,7 @@ export default async function AutomacaoPage() {
     <div className="space-y-6">
       <div>
         <p className="text-sm uppercase tracking-[0.24em] text-[--sk-text-brand]">Automação</p>
-        <h1 className="mt-2 text-3xl font-semibold text-white">Agentes, logs e templates operacionais</h1>
+        <h1 className="mt-2 text-3xl font-semibold text-[var(--sk-text-primary)]">Agentes, logs e templates operacionais</h1>
       </div>
 
       <Card>
@@ -41,33 +41,33 @@ export default async function AutomacaoPage() {
         </CardHeader>
         <CardContent>
           {agentConfigs.length === 0 ? (
-            <p className="text-sm text-slate-500">Nenhum agente configurado.</p>
+            <p className="text-sm text-[var(--sk-text-muted)]">Nenhum agente configurado.</p>
           ) : (
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               {agentConfigs.map((agent) => (
                 <div
-                  className="rounded-3xl border border-white/10 bg-slate-950/40 p-4"
+                  className="rounded-3xl border border-[var(--sk-border)] bg-[var(--sk-bg-soft)] p-4"
                   key={agent.id}
                 >
                   <div className="flex items-center justify-between">
-                    <h3 className="font-semibold text-white">
+                    <h3 className="font-semibold text-[var(--sk-text-primary)]">
                       {AGENT_LABELS[agent.agent_key] ?? agent.agent_key}
                     </h3>
                     <Badge variant={agent.is_active ? "success" : "warning"}>
                       {agent.is_active ? "Ativo" : "Pausado"}
                     </Badge>
                   </div>
-                  <p className="mt-2 text-sm text-slate-400">{agent.name}</p>
+                  <p className="mt-2 text-sm text-[var(--sk-text-muted)]">{agent.name}</p>
                   {agent.tone ? (
-                    <p className="mt-1 text-xs text-slate-500">Tom: {agent.tone}</p>
+                    <p className="mt-1 text-xs text-[var(--sk-text-muted)]">Tom: {agent.tone}</p>
                   ) : null}
                   <div className="mt-4 flex items-center gap-2">
                     {agent.is_active ? (
                       <Zap className="h-4 w-4 text-emerald-400" />
                     ) : (
-                      <ZapOff className="h-4 w-4 text-slate-500" />
+                      <ZapOff className="h-4 w-4 text-[var(--sk-text-muted)]" />
                     )}
-                    <span className="text-xs text-slate-400">
+                    <span className="text-xs text-[var(--sk-text-muted)]">
                       {agent.is_active ? "Operando via n8n" : "Desativado"}
                     </span>
                   </div>
@@ -85,18 +85,18 @@ export default async function AutomacaoPage() {
         </CardHeader>
         <CardContent className="space-y-3">
           {runs.length === 0 ? (
-            <p className="text-sm text-slate-500">Sem execuções recentes.</p>
+            <p className="text-sm text-[var(--sk-text-muted)]">Sem execuções recentes.</p>
           ) : (
             runs.map((run) => (
               <div
-                className="flex flex-col gap-4 rounded-3xl border border-white/10 bg-slate-950/40 p-4 md:flex-row md:items-center md:justify-between"
+                className="flex flex-col gap-4 rounded-3xl border border-[var(--sk-border)] bg-[var(--sk-bg-soft)] p-4 md:flex-row md:items-center md:justify-between"
                 key={run.id}
               >
                 <div className="flex items-center gap-3">
                   {statusIcon(run.status)}
                   <div>
-                    <p className="font-semibold text-white">{run.workflow_name}</p>
-                    <p className="text-sm text-slate-400">
+                    <p className="font-semibold text-[var(--sk-text-primary)]">{run.workflow_name}</p>
+                    <p className="text-sm text-[var(--sk-text-muted)]">
                       {run.trigger_type ?? "interno"} • {run.duration_ms ?? 0} ms
                     </p>
                   </div>
@@ -113,7 +113,7 @@ export default async function AutomacaoPage() {
                   >
                     {run.status}
                   </Badge>
-                  <span className="text-sm text-slate-400">{formatRelativeDate(run.created_at)}</span>
+                  <span className="text-sm text-[var(--sk-text-muted)]">{formatRelativeDate(run.created_at)}</span>
                 </div>
               </div>
             ))
@@ -129,11 +129,11 @@ export default async function AutomacaoPage() {
           </CardHeader>
           <CardContent className="space-y-3">
             {templates.map((t) => (
-              <div className="rounded-3xl border border-white/10 bg-slate-950/40 p-4" key={t.id}>
-                <p className="font-semibold text-white">{t.title}</p>
-                <p className="mt-1 text-sm text-slate-300">{t.body}</p>
+              <div className="rounded-3xl border border-[var(--sk-border)] bg-[var(--sk-bg-soft)] p-4" key={t.id}>
+                <p className="font-semibold text-[var(--sk-text-primary)]">{t.title}</p>
+                <p className="mt-1 text-sm text-[var(--sk-text-secondary)]">{t.body}</p>
                 {t.variables.length > 0 ? (
-                  <p className="mt-2 text-xs text-slate-500">
+                  <p className="mt-2 text-xs text-[var(--sk-text-muted)]">
                     Variáveis: {t.variables.map((v) => `{${v}}`).join(", ")}
                   </p>
                 ) : null}

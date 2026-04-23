@@ -108,23 +108,23 @@ export function ProfessionalsManager({ initial }: { initial: Professional[] }) {
         </CardHeader>
         <CardContent className="space-y-3">
           {professionals.length === 0 ? (
-            <p className="text-sm text-slate-500">Nenhum profissional cadastrado.</p>
+            <p className="text-sm text-[var(--sk-text-muted)]">Nenhum profissional cadastrado.</p>
           ) : (
             professionals.map((p) => (
               <div
-                className="flex items-center justify-between rounded-3xl border border-white/10 bg-slate-950/40 p-4"
+                className="flex items-center justify-between rounded-3xl border border-[var(--sk-border)] bg-[var(--sk-bg-soft)] p-4"
                 key={p.id}
               >
                 <div>
-                  <p className="font-semibold text-white">{p.name}</p>
-                  <p className="text-sm text-slate-400">{p.phone ?? "Sem telefone"}</p>
+                  <p className="font-semibold text-[var(--sk-text-primary)]">{p.name}</p>
+                  <p className="text-sm text-[var(--sk-text-muted)]">{p.phone ?? "Sem telefone"}</p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="text-sm text-slate-300">
+                  <span className="text-sm text-[var(--sk-text-secondary)]">
                     Comissão {p.commission_pct ?? 0}%
                   </span>
                   <button
-                    className="rounded-xl border border-white/10 p-2 text-slate-400 transition hover:bg-white/5 hover:text-white"
+                    className="rounded-xl border border-[var(--sk-border)] p-2 text-[var(--sk-text-muted)] transition hover:bg-[var(--sk-bg-hover)] hover:text-[var(--sk-text-primary)]"
                     onClick={() => openEdit(p)}
                     title="Editar"
                     type="button"
@@ -132,7 +132,7 @@ export function ProfessionalsManager({ initial }: { initial: Professional[] }) {
                     <Pencil className="h-4 w-4" />
                   </button>
                   <button
-                    className="rounded-xl border border-white/10 p-2 text-slate-400 transition hover:bg-red-500/10 hover:text-red-400"
+                    className="rounded-xl border border-[var(--sk-border)] p-2 text-[var(--sk-text-muted)] transition hover:bg-red-500/10 hover:text-red-400"
                     onClick={() => deactivate(p)}
                     title="Desativar"
                     type="button"
@@ -154,7 +154,7 @@ export function ProfessionalsManager({ initial }: { initial: Professional[] }) {
       >
         <div className="space-y-4">
           <div className="space-y-2">
-            <label className="text-sm text-slate-300">Nome *</label>
+            <label className="text-sm text-[var(--sk-text-secondary)]">Nome *</label>
             <Input
               onChange={(e) => setDraft((d) => ({ ...d, name: e.target.value }))}
               placeholder="Ex: Ana Beatriz"
@@ -162,7 +162,7 @@ export function ProfessionalsManager({ initial }: { initial: Professional[] }) {
             />
           </div>
           <div className="space-y-2">
-            <label className="text-sm text-slate-300">Telefone</label>
+            <label className="text-sm text-[var(--sk-text-secondary)]">Telefone</label>
             <Input
               onChange={(e) => setDraft((d) => ({ ...d, phone: e.target.value }))}
               placeholder="+55 31 99999-0000"
@@ -170,7 +170,7 @@ export function ProfessionalsManager({ initial }: { initial: Professional[] }) {
             />
           </div>
           <div className="space-y-2">
-            <label className="text-sm text-slate-300">Comissão (%)</label>
+            <label className="text-sm text-[var(--sk-text-secondary)]">Comissão (%)</label>
             <Input
               max="100"
               min="0"

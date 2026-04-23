@@ -13,7 +13,7 @@ export default async function FinanceiroPage() {
     <div className="space-y-6">
       <div>
         <p className="text-sm uppercase tracking-[0.24em] text-[--sk-text-brand]">Financeiro</p>
-        <h1 className="mt-2 text-3xl font-semibold text-white">Sinais, caixa e perdas operacionais</h1>
+        <h1 className="mt-2 text-3xl font-semibold text-[var(--sk-text-primary)]">Sinais, caixa e perdas operacionais</h1>
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
@@ -23,7 +23,7 @@ export default async function FinanceiroPage() {
             <CardDescription>Fechamento do dia corrente.</CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-semibold text-white">{formatCurrency(metrics?.revenue_total ?? 0)}</p>
+            <p className="text-3xl font-semibold text-[var(--sk-text-primary)]">{formatCurrency(metrics?.revenue_total ?? 0)}</p>
           </CardContent>
         </Card>
         <Card>
@@ -32,7 +32,7 @@ export default async function FinanceiroPage() {
             <CardDescription>Valor adiantado já garantido.</CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-semibold text-white">
+            <p className="text-3xl font-semibold text-[var(--sk-text-primary)]">
               {formatCurrency(metrics?.revenue_deposits ?? 0)}
             </p>
           </CardContent>
@@ -43,7 +43,7 @@ export default async function FinanceiroPage() {
             <CardDescription>No-shows e lacunas evitáveis.</CardDescription>
           </CardHeader>
           <CardContent className="flex items-center justify-between">
-            <p className="text-3xl font-semibold text-white">
+            <p className="text-3xl font-semibold text-[var(--sk-text-primary)]">
               {formatCurrency(metrics?.revenue_lost_no_show ?? 0)}
             </p>
             <Badge variant="warning">

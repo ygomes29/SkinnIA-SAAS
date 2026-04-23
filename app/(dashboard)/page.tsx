@@ -26,10 +26,10 @@ export default async function DashboardPage() {
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="text-sm uppercase tracking-[0.24em] text-[--sk-text-brand]">Dashboard principal</p>
-            <h1 className="mt-3 font-display text-3xl font-semibold text-white">
+            <h1 className="mt-3 font-display text-3xl font-semibold text-[var(--sk-text-primary)]">
               Operação, receita e relacionamento no mesmo lugar.
             </h1>
-            <p className="mt-3 max-w-2xl text-slate-300">
+            <p className="mt-3 max-w-2xl text-[var(--sk-text-secondary)]">
               O painel resume a saúde da agenda, os sinais capturados e os clientes prontos para
               receber campanhas de retorno.
             </p>
@@ -48,7 +48,7 @@ export default async function DashboardPage() {
         </div>
       </section>
 
-      <Suspense fallback={<div className="rounded-3xl border border-white/10 p-6">Carregando métricas...</div>}>
+      <Suspense fallback={<div className="rounded-3xl border border-[var(--sk-border)] p-6 text-[var(--sk-text-muted)]">Carregando métricas...</div>}>
         <MetricsCards />
       </Suspense>
 
@@ -66,18 +66,18 @@ export default async function DashboardPage() {
         </CardHeader>
         <CardContent className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           {reactivationClients.length === 0 && (
-            <p className="col-span-4 py-4 text-sm text-slate-500">
+            <p className="col-span-4 py-4 text-sm text-[var(--sk-text-muted)]">
               Nenhum cliente na janela de reativação (25–35 dias sem atendimento).
             </p>
           )}
           {reactivationClients.slice(0, 4).map((client) => (
             <div
-              className="rounded-3xl border border-violet-500/12 bg-[#0D1226]/60 p-4"
+              className="rounded-3xl border border-[var(--sk-border)] bg-[var(--sk-bg-card)] p-4"
               key={client.id}
             >
-              <p className="text-lg font-semibold text-white">{client.name}</p>
-              <p className="mt-1 text-sm text-slate-400">{client.phone}</p>
-              <p className="mt-4 text-sm text-slate-300">
+              <p className="text-lg font-semibold text-[var(--sk-text-primary)]">{client.name}</p>
+              <p className="mt-1 text-sm text-[var(--sk-text-muted)]">{client.phone}</p>
+              <p className="mt-4 text-sm text-[var(--sk-text-secondary)]">
                 Último atendimento {formatRelativeDate(client.last_appointment_at)}
               </p>
               <Button className="mt-4 w-full" size="sm" variant="secondary">

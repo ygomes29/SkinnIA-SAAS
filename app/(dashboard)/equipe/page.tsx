@@ -9,7 +9,7 @@ export default async function EquipePage() {
     <div className="space-y-6">
       <div>
         <p className="text-sm uppercase tracking-[0.24em] text-[--sk-text-brand]">Equipe</p>
-        <h1 className="mt-2 text-3xl font-semibold text-white">Profissionais, comissões e cobertura</h1>
+        <h1 className="mt-2 text-3xl font-semibold text-[var(--sk-text-primary)]">Profissionais, comissões e cobertura</h1>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
