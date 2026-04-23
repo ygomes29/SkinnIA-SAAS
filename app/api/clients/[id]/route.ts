@@ -49,7 +49,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     .select()
     .single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: "Falha ao atualizar cliente" }, { status: 500 });
   if (!data) return NextResponse.json({ error: "Cliente não encontrado" }, { status: 404 });
 
   return NextResponse.json(data);
@@ -74,7 +74,7 @@ export async function DELETE(_request: Request, { params }: { params: { id: stri
     .eq("id", params.id)
     .eq("organization_id", orgId);
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: "Falha ao desativar cliente" }, { status: 500 });
 
   return NextResponse.json({ ok: true });
 }

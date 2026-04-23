@@ -45,7 +45,7 @@ export async function PATCH(
     .select()
     .single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: "Erro interno do servidor" }, { status: 500 });
 
   return NextResponse.json(data);
 }
@@ -63,7 +63,7 @@ export async function DELETE(
     .eq("id", params.id)
     .eq("organization_id", ctx.orgId);
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: "Erro interno do servidor" }, { status: 500 });
 
   return NextResponse.json({ ok: true });
 }

@@ -13,7 +13,7 @@ async function verifySignature(payload: string, signature: string | null) {
 
   const secret = signature.includes("v1=") ? stripeSecret : mpSecret;
   if (!secret) {
-    return true;
+    return false;
   }
 
   const key = await crypto.subtle.importKey(
