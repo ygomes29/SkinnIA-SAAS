@@ -2,6 +2,7 @@ import { CheckCircle2, Clock3, XCircle, Zap, ZapOff } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { TemplateEditor } from "@/components/automacao/template-editor";
 import { getAutomationRuns, getAgentConfigs, getMessageTemplates } from "@/lib/dashboard-data";
 import { formatRelativeDate } from "@/lib/utils/date";
 
@@ -125,20 +126,10 @@ export default async function AutomacaoPage() {
         <Card>
           <CardHeader>
             <CardTitle>Templates de mensagem</CardTitle>
-            <CardDescription>Mensagens transacionais configuradas para o WhatsApp.</CardDescription>
+            <CardDescription>Mensagens transacionais enviadas pelo WhatsApp. Clique em editar para personalizar.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3">
-            {templates.map((t) => (
-              <div className="rounded-3xl border border-[var(--sk-border)] bg-[var(--sk-bg-soft)] p-4" key={t.id}>
-                <p className="font-semibold text-[var(--sk-text-primary)]">{t.title}</p>
-                <p className="mt-1 text-sm text-[var(--sk-text-secondary)]">{t.body}</p>
-                {t.variables.length > 0 ? (
-                  <p className="mt-2 text-xs text-[var(--sk-text-muted)]">
-                    Variáveis: {t.variables.map((v) => `{${v}}`).join(", ")}
-                  </p>
-                ) : null}
-              </div>
-            ))}
+          <CardContent>
+            <TemplateEditor templates={templates} />
           </CardContent>
         </Card>
       ) : null}

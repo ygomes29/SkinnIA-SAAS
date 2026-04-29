@@ -1,6 +1,9 @@
-import { Zap } from "lucide-react";
+import { getAgentConfigs } from "@/lib/dashboard-data";
+import { AgentManager } from "@/components/agentes/agent-manager";
 
-export default function AgentesPage() {
+export default async function AgentesPage() {
+  const agents = await getAgentConfigs();
+
   return (
     <div className="space-y-6">
       <div>
@@ -9,22 +12,11 @@ export default function AgentesPage() {
           Configuração de agentes inteligentes
         </h1>
         <p className="mt-2 text-[--sk-text-secondary]">
-          Gerencie prompts, comportamento e gatilhos dos agentes de IA
+          Ative, pause e personalize cada agente de automação.
         </p>
       </div>
 
-      <div className="flex min-h-[400px] items-center justify-center rounded-3xl border border-[var(--sk-border)] bg-[var(--sk-bg-soft)]">
-        <div className="text-center">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-violet-500/20 bg-violet-500/10">
-            <Zap className="h-8 w-8 text-violet-400" />
-          </div>
-          <h3 className="mt-4 text-lg font-medium text-[var(--sk-text-primary)]">Agentes IA</h3>
-          <p className="mt-2 max-w-md text-sm text-[--sk-text-muted]">
-            Esta página está em desenvolvimento. Aqui você poderá configurar e personalizar
-            os agentes de IA para atendimento, confirmações e reativação.
-          </p>
-        </div>
-      </div>
+      <AgentManager initialAgents={agents} />
     </div>
   );
 }

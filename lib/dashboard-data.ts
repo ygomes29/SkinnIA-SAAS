@@ -6,6 +6,7 @@ import type {
   Appointment,
   AutomationRun,
   Client,
+  ConversationThread,
   MetricDaily,
   Organization,
   Professional,
@@ -401,6 +402,61 @@ export async function getMessageTemplates(): Promise<
 
   if (error || !data) return [];
   return data as { id: string; key: string; title: string; body: string; variables: string[] }[];
+}
+
+export async function getConversationThreads(): Promise<
+  (ConversationThread & { client_name?: string; last_message?: string })[]
+> {
+  const supabase = createSupabaseServerClient();
+  if (!supabase) return [];
+
+  const { data, error } = await supabase
+    .from("conversation_threads")
+    .select(`
+      id, organization_id, client_id, phone, channel, status,
+      current_agent, context, last_message_at, created_at,
+      clients ( name )
+    `)
+    .order("last_message_at", { ascending: false, nullsFirst: false })
+    .limit(50);
+
+  if (error || !data) return [];
+
+  const threads = data as Array<Record<string, unknown>>;
+  const threadIds = threads.map((t) => t.id as string);
+
+  // Fetch last message per thread
+  const lastMessages: Record<string, string> = {};
+  if (threadIds.length > 0) {
+    const { data: msgs } = await supabase
+      .from("messages")
+      .select("thread_id, content, created_at")
+      .in("thread_id", threadIds)
+      .order("created_at", { ascending: false });
+
+    if (msgs) {
+      for (const msg of msgs) {
+        if (!lastMessages[msg.thread_id as string]) {
+          lastMessages[msg.thread_id as string] = (msg.content as string) ?? "";
+        }
+      }
+    }
+  }
+
+  return threads.map((t) => ({
+    id: t.id as string,
+    organization_id: t.organization_id as string,
+    client_id: (t.client_id as string) ?? null,
+    phone: t.phone as string,
+    channel: (t.channel as string) ?? "whatsapp",
+    status: (t.status as ConversationThread["status"]) ?? "open",
+    current_agent: (t.current_agent as string) ?? null,
+    context: (t.context as Record<string, unknown>) ?? {},
+    last_message_at: (t.last_message_at as string) ?? null,
+    created_at: t.created_at as string,
+    client_name: ((t.clients as Record<string, string> | null)?.name) ?? undefined,
+    last_message: lastMessages[t.id as string] ?? undefined,
+  }));
 }
 
 export async function getServices(): Promise<Service[]> {
