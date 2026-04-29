@@ -1,4 +1,8 @@
-# SkinnIA — Blueprint Técnico Completo para Claude Code
+
+
+
+
+
 
 > Plataforma SaaS de automação para negócios de beleza: clínicas, salões, barbearias, lash, nail e studios de estética.
 > Stack: Supabase · n8n · Evolution API (WhatsApp) · Next.js 14 · Stripe/Mercado Pago
